@@ -1,8 +1,8 @@
-package com.fastsearch.grasp
+package com.fastsearch.gripe
 
 import java.lang.instrument.Instrumentation
 
-object GraspAgent {
+object GripeAgent {
   def agentmain(agentArgs: String, instrumentation: Instrumentation) {
       println("hello world!")
   }
