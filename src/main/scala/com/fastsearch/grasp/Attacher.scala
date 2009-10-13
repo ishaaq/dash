@@ -1,6 +1,6 @@
 package com.fastsearch.grasp
 
-import com.sun.tools.attach.spi._
+import java.io.File
 import com.sun.tools.attach._
 import collection.jcl.Conversions._
 
@@ -10,7 +10,8 @@ class Attacher {
         case Left(status) => exit(status)
         case Right(vmDesc) => {
             val vm = VirtualMachine.attach(vmDesc.id)
-            vm.getSystemProperties.foreach(println)
+            vm.loadAgent(System.getProperty("user.dir") + File.separator + "grasp-0.1.jar", "")
+            vm.detach
         }
       }
     }
