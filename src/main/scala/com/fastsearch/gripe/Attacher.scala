@@ -1,6 +1,7 @@
 package com.fastsearch.gripe
 
 import java.io.File
+import java.net.ServerSocket
 import com.sun.tools.attach._
 import collection.jcl.Conversions._
 
@@ -10,10 +11,23 @@ class Attacher {
         case Left(status) => exit(status)
         case Right(vmDesc) => {
             val vm = VirtualMachine.attach(vmDesc.id)
-            vm.loadAgent(System.getProperty("user.dir") + File.separator + "gripe-0.1.jar", "")
+            val port = getEphemeralPort
+            val server = new GripeServer(port, new InteractiveMessageFactory)
+            server.start
+            vm.loadAgent(System.getProperty("user.dir") + File.separator + "gripe.jar", port.toString)
             vm.detach
         }
       }
+    }
+
+    /**
+     * Its a shame to have to do this this way...
+     */
+    private def getEphemeralPort() = {
+      val tmpSocket = new ServerSocket(0)
+      val port = tmpSocket.getLocalPort
+      tmpSocket.close
+      port
     }
 
     private def vmDescriptor: Either[Int, VirtualMachineDescriptor] = {
