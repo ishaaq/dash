@@ -1,23 +1,32 @@
 package com.fastsearch.gripe
 
 import java.io.File
-import java.net.ServerSocket
 import com.sun.tools.attach._
 import collection.jcl.Conversions._
+import scala.actors.remote.Node
+import java.net.ServerSocket
+
 
 class Attacher {
     def attach = {
-      vmDescriptor match {
+      val port = vmDescriptor match {
         case Left(status) => exit(status)
         case Right(vmDesc) => {
             val vm = VirtualMachine.attach(vmDesc.id)
-            val port = getEphemeralPort
-            val server = new GripeServer(port, new InteractiveMessageFactory)
-            server.start
-            vm.loadAgent(System.getProperty("user.dir") + File.separator + "gripe.jar", port.toString)
-            vm.detach
+            val props = vm.getSystemProperties
+            if(props.containsKey(GripeServer.portProperty)) {
+              props.getProperty(GripeServer.portProperty).toInt
+            } else {
+              val port = getEphemeralPort
+              vm.loadAgent(System.getProperty("user.dir") + File.separator + "gripe.jar", port.toString)
+              vm.detach
+              port
+            }
         }
       }
+      val node = Node("127.0.0.1", port)
+      val client = new GripeClient(node, new InteractiveMessageFactory)
+      client.start
     }
 
     /**

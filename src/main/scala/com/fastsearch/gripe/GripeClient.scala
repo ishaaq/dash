@@ -6,22 +6,24 @@ import scala.actors.remote.RemoteActor
 import scala.actors.remote.RemoteActor._
 import scala.actors.OutputChannel
 import scala.actors.remote.Node
+import java.util.UUID
 
-class GripeClient(server: Node) extends Actor {
+class GripeClient(server: Node, messageFactory: MessageFactory) extends Actor {
     def act() {
-        println("client: ready")
         val sink = select(server, GripeServer.name)
         link(sink)
-        sink ! Ack
+        sink ! Syn(messageFactory.id)
         loop {
             receive {
-              case Command(command) =>
-                println("client: command received: " + command)
-                sink ! new Response("response")
-              case Halt =>
-                println("client: halt")
-                sink ! HaltAck
-                Thread.sleep(1000)
+              case Ack =>
+                sender ! messageFactory.get
+              case Response(response) =>
+                println(">> " + response)
+                sender ! messageFactory.get
+              case ErrorResponse(response) =>
+                println("ERR! " + response)
+                sender ! messageFactory.get
+              case Bye(id) =>
                 exit
             }
         }
