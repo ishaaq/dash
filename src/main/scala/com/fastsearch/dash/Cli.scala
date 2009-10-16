@@ -1,11 +1,11 @@
-package com.fastsearch.gripe
+package com.fastsearch.dash
 
 import java.io.File
 import java.lang.reflect.Method
 import java.net.{MalformedURLException, URL, URLClassLoader}
 import java.security.{AccessController, PrivilegedActionException, PrivilegedExceptionAction}
 
-object GripeCLI {
+object Cli {
   val systemLoader = ClassLoader.getSystemClassLoader().asInstanceOf[URLClassLoader];
   val method = classOf[URLClassLoader].getDeclaredMethod("addURL", classOf[URL]);
   method.setAccessible(true)

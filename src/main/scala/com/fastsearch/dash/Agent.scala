@@ -1,12 +1,12 @@
-package com.fastsearch.gripe
+package com.fastsearch.dash
 
 import java.lang.instrument.Instrumentation
 
-object GripeAgent {
+object Agent {
   def agentmain(portString: String, instrumentation: Instrumentation) {
       val port = portString.toInt
-      System.setProperty(GripeServer.portProperty, portString)
-      val server = new GripeServer(port)
+      System.setProperty(Server.portProperty, portString)
+      val server = new Server(port)
       server.start
   }
 }

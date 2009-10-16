@@ -1,11 +1,11 @@
 import sbt._
 import java.io.File
 
-class GripeProject(info: ProjectInfo) extends DefaultProject(info) {
-    override def mainClass = Some("com.fastsearch.gripe.GripeCLI")
+class Project(info: ProjectInfo) extends DefaultProject(info) {
+    override def mainClass = Some("com.fastsearch.dash.Cli")
     override def manifestClassPath = Some("scala-library.jar")
 
-    override def packageOptions =  ManifestAttributes(("Agent-Class", "com.fastsearch.gripe.GripeAgent")) :: super.packageOptions.toList
+    override def packageOptions =  ManifestAttributes(("Agent-Class", "com.fastsearch.dash.Agent")) :: super.packageOptions.toList
 
     val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
     val nexusReleases = "Melbourne R&D Repository" at "http://mel1u114:8081/nexus/content/groups/central"
@@ -22,7 +22,6 @@ class GripeProject(info: ProjectInfo) extends DefaultProject(info) {
 
     override def compileClasspath = super.compileClasspath +++ toolsJar
 
-    val groovy_all = "org.codehaus.groovy" % "groovy-all" % "1.6.3" intransitive
     val jline = "jline" % "jline" % "0.9.93" intransitive
     val args4j = "args4j" % "args4j" % "2.0.16" intransitive
 

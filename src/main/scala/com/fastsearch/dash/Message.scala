@@ -1,4 +1,4 @@
-package com.fastsearch.gripe
+package com.fastsearch.dash
 
 import java.util.UUID
 
@@ -15,4 +15,5 @@ case class Run(id: UUID, filePath: String, args: Array[String]) extends Message
 case class Command(id: UUID, command: String) extends Message
 case class Response(response: String) extends Message
 case class ErrorResponse(response: String) extends Message
+case class Print(string: String) extends Message
 

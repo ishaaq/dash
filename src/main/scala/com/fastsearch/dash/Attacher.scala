@@ -1,4 +1,4 @@
-package com.fastsearch.gripe
+package com.fastsearch.dash
 
 import java.io.File
 import com.sun.tools.attach._
@@ -14,18 +14,18 @@ class Attacher {
         case Right(vmDesc) => {
             val vm = VirtualMachine.attach(vmDesc.id)
             val props = vm.getSystemProperties
-            if(props.containsKey(GripeServer.portProperty)) {
-              props.getProperty(GripeServer.portProperty).toInt
+            if(props.containsKey(Server.portProperty)) {
+              props.getProperty(Server.portProperty).toInt
             } else {
               val port = getEphemeralPort
-              vm.loadAgent(System.getProperty("user.dir") + File.separator + "gripe.jar", port.toString)
+              vm.loadAgent(System.getProperty("user.dir") + File.separator + "dash.jar", port.toString)
               vm.detach
               port
             }
         }
       }
       val node = Node("127.0.0.1", port)
-      val client = new GripeClient(node, new InteractiveMessageFactory)
+      val client = new Client(node, new InteractiveMessageFactory)
       client.start
     }
 

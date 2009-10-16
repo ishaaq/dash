@@ -1,4 +1,4 @@
-package com.fastsearch.gripe
+package com.fastsearch.dash
 
 import java.util.UUID
 
@@ -11,7 +11,7 @@ class InteractiveMessageFactory extends MessageFactory {
     val id = UUID.randomUUID
 
     def get = {
-      print("gripe> ")
+      print("dash> ")
       Console.readLine match {
         case null => Bye(id)
         case command => new Command(id, command)
