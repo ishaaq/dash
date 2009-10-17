@@ -23,6 +23,8 @@ class Server(port: Int) extends Actor {
               sender ! Ack
             case Command(id, command) =>
               sender ! sessions(id).run(command)
+            case Run(id, script, args) =>
+              sender ! sessions(id).runScript(script, args)
             case Bye(id) =>
               sessions(id).close
               sessions - id

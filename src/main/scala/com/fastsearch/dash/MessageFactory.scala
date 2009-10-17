@@ -1,20 +1,33 @@
 package com.fastsearch.dash
 
 import java.util.UUID
+import jline._
+import java.io.{BufferedReader, File, FileReader}
+import scala.collection.immutable.Queue
 
 trait MessageFactory {
     def get: Message
-    def id: UUID
+    val id = UUID.randomUUID
 }
 
 class InteractiveMessageFactory extends MessageFactory {
-    val id = UUID.randomUUID
+    private val console = new ConsoleReader
+    console.setHistory(new History(new File(System.getProperty("user.home"), ".dash_history")))
 
     def get = {
-      print("dash> ")
-      Console.readLine match {
+      console.readLine("dash> ") match {
         case null => Bye(id)
         case command => new Command(id, command)
       }
+    }
+}
+
+class ScriptedMessageFactory(script: String, args: Array[String]) extends MessageFactory {
+    private var hasRun = false
+    def get = hasRun match {
+      case false =>
+        hasRun = true
+        new Run(id, script, args)
+      case true => new Bye(id)
     }
 }

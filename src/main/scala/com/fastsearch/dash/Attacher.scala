@@ -7,12 +7,11 @@ import scala.actors.remote.Node
 import java.net.ServerSocket
 
 
-class Attacher {
+class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
     def attach = {
-      val port = vmDescriptor match {
+      val port = attachVm(pid) match {
         case Left(status) => exit(status)
-        case Right(vmDesc) => {
-            val vm = VirtualMachine.attach(vmDesc.id)
+        case Right(vm) => {
             val props = vm.getSystemProperties
             if(props.containsKey(Server.portProperty)) {
               props.getProperty(Server.portProperty).toInt
@@ -25,7 +24,10 @@ class Attacher {
         }
       }
       val node = Node("127.0.0.1", port)
-      val client = new Client(node, new InteractiveMessageFactory)
+      val client = new Client(node, file match {
+                                    case None => new InteractiveMessageFactory
+                                    case Some(script) => new ScriptedMessageFactory(script.getAbsolutePath, args)
+                                  })
       client.start
     }
 
@@ -39,25 +41,29 @@ class Attacher {
       port
     }
 
-    private def vmDescriptor: Either[Int, VirtualMachineDescriptor] = {
-      val vms = VirtualMachine.list.toList
-      vms.zipWithIndex.foreach { case (vm, idx) =>
-          println("[%s] %s %s".format(idx + 1, vm.id, vm.displayName))
-      }
-
-      print("Choose a VM number to attach to [1" + (if (vms.length == 1) "] : " else " - %s] : ".format(vms.length)))
-
-      try {
-          readInt match {
-            case invalidId if invalidId < 1 || invalidId > vms.length =>
-              println("Invalid vm id: %s".format(invalidId))
-              Left(1)
-            case id => Right(vms(id - 1))
+    private def attachVm(pid: Option[Int]): Either[Int, VirtualMachine] = {
+      pid match {
+        case Some(pid) => Right(VirtualMachine.attach(pid.toString))
+        case None =>
+          val vms = VirtualMachine.list.toList
+          vms.zipWithIndex.foreach { case (vm, idx) =>
+              println("[%s] %s %s".format(idx + 1, vm.id, vm.displayName))
           }
-      } catch {
-        case ex : NumberFormatException =>
-          println("Invalid vm id!")
-          Left(1)
+
+          print("Choose a VM number to attach to [1" + (if (vms.length == 1) "] : " else " - %s] : ".format(vms.length)))
+
+          try {
+              readInt match {
+                case invalidId if invalidId < 1 || invalidId > vms.length =>
+                  println("Invalid vm id: %s".format(invalidId))
+                  Left(1)
+                case id => Right(VirtualMachine.attach(vms(id - 1).id))
+              }
+          } catch {
+            case ex : NumberFormatException =>
+              println("Invalid vm id!")
+              Left(1)
+          }
       }
     }
 }
