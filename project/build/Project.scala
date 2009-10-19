@@ -3,7 +3,6 @@ import java.io.File
 
 class Project(info: ProjectInfo) extends DefaultProject(info) {
     override def mainClass = Some("com.fastsearch.dash.Cli")
-    override def manifestClassPath = Some("scala-library.jar")
 
     override def packageOptions =  ManifestAttributes(("Agent-Class", "com.fastsearch.dash.Agent")) :: super.packageOptions.toList
 
@@ -22,6 +21,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
     override def compileClasspath = super.compileClasspath +++ toolsJar
 
+    val groovy_all = "org.codehaus.groovy" % "groovy-all" % "1.6.3" intransitive
     val jline = "jline" % "jline" % "0.9.93" intransitive
     val args4j = "args4j" % "args4j" % "2.0.16" intransitive
 
@@ -30,8 +30,8 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     def assemblyOutputPath = outputPath / assemblyJarName
     def assemblyJarName = artifactID + ".jar"
     def assemblyTemporaryPath = outputPath / "assembly-libs"
-    def assemblyClasspath = runClasspath
-    def assemblyExtraJars = mainDependencies.scalaJars
+    def assemblyClasspath = super.compileClasspath
+    def assemblyExtraJars = mainDependencies.scalaLibrary
     def assemblyPaths(tempDir: Path, classpath: PathFinder, extraJars: PathFinder, exclude: PathFinder => PathFinder) = {
         val (libs, directories) = classpath.get.toList.partition(ClasspathUtilities.isArchive)
         for(jar <- extraJars.get ++ libs) FileUtilities.unzip(jar, tempDir, log).left.foreach(error)

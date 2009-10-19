@@ -1,19 +1,17 @@
 package com.fastsearch.dash
 
-import java.io.{BufferedReader, File, FileReader}
 import java.util.UUID
-import javax.script._
 
-class ClientSession(id: UUID, out: RemoteWriter) {
-    private val engine = ScriptEngineFactory.get
-          engine.getContext.setWriter(out)
+trait ClientSession {
+    def id: UUID
+    def out: RemoteWriter
 
-    def run(command: String): Message = tryRun(engine.eval(command))
+    def run(command: String): Message = tryEval(eval(command))
 
     // todo work with args as well:
-    def runScript(script: String, args: Array[String]): Message = tryRun(engine.eval(new FileReader(script)))
+    def runScript(script: String, args: Array[String]): Message = tryEval(eval(script, args))
 
-    private def tryRun(eval: => Any): Message = {
+    private def tryEvaluation(eval: => Any): Message = {
       try {
           eval match {
             case null => new Response(null)
@@ -24,14 +22,24 @@ class ClientSession(id: UUID, out: RemoteWriter) {
       }
     }
 
-    def close = {
-      // nothing to do really
+
+    private def tryEval(eval: => Any): Message = {
+      try {
+          eval match {
+            case null => new Response(null)
+            case x => new Response(x.toString)
+          }
+      } catch {
+        case e => new ErrorResponse(e.getMessage)
+      }
     }
+
+    def close: Unit
+    protected def eval(command: String): AnyRef
+    protected def eval(script: String, args: Array[String]): AnyRef
 }
 
-object ScriptEngineFactory {
-  private val factory = new ScriptEngineManager
-  def get = factory.getEngineByName("JavaScript")
+trait ClientSessionFactory {
+    def apply(id: UUID, out: RemoteWriter): ClientSession
 }
-
 

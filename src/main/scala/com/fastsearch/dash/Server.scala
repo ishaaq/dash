@@ -9,7 +9,7 @@ import scala.actors.remote.RemoteActor
 import scala.actors.remote.RemoteActor._
 import scala.collection.mutable.Map
 
-class Server(port: Int) extends Actor {
+class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Actor {
     private val sessions = Map[UUID, ClientSession]()
     def act() {
         println("Starting dash server on port: " + port)
@@ -19,7 +19,7 @@ class Server(port: Int) extends Actor {
         loop {
           receive {
             case Syn(id) =>
-              sessions + ((id, new ClientSession(id, new RemoteWriter(sender))))
+              sessions + ((id, factory(id, new RemoteWriter(sender))))
               sender ! Ack
             case Command(id, command) =>
               sender ! sessions(id).run(command)
@@ -41,17 +41,10 @@ object Server {
 }
 
 class RemoteWriter(sender: OutputChannel[Message]) extends Writer {
-    private val sb = new StringBuilder
-    def close() = {
-        if(sb.size > 0) {
-          flush
-        }
-    }
-    def flush() = {
-        sender ! Print(sb.toString)
-        sb.clear
-    }
-    def write(chars: Array[Char], offset: Int, length: Int) = sb.append(chars, offset, length)
+    def close() = {}
+    def flush() = {}
+    def write(chars: Array[Char], offset: Int, length: Int) = {}
 
-    def print(str: String) = sb.append(str)
+    def print(str: String) = sender ! Print(str)
+    def println(str: String) = sender ! Print(str + "\n")
 }

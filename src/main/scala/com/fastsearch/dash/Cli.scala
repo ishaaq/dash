@@ -9,8 +9,8 @@ import org.kohsuke.args4j.{Option => Opt, CmdLineParser, Argument, CmdLineExcept
 import org.kohsuke.args4j.spi.StringArrayOptionHandler
 
 object Cli {
-  val systemLoader = ClassLoader.getSystemClassLoader().asInstanceOf[URLClassLoader];
-  val method = classOf[URLClassLoader].getDeclaredMethod("addURL", classOf[URL]);
+  private val systemLoader = ClassLoader.getSystemClassLoader().asInstanceOf[URLClassLoader]
+  private val method = classOf[URLClassLoader].getDeclaredMethod("addURL", classOf[URL])
   method.setAccessible(true)
 
     def main(args: Array[String]) {
