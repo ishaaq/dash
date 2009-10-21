@@ -26,6 +26,7 @@ trait ClientSession {
     def close: Unit
     protected def eval(command: String): AnyRef
     protected def eval(script: String, args: Array[String]): AnyRef
+    def tabCompletion(prefix: String): TabCompletionList
 }
 
 trait ClientSessionFactory {

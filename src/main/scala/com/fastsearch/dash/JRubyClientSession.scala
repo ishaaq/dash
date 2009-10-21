@@ -15,6 +15,9 @@ class JRubyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSess
     // TODO - send args to script
     protected def eval(script: String, args: Array[String]) = container.runScriptlet(new FileReader(script), script)
 
+    // TODO - tab completion
+    def tabCompletion(prefix: String) = new TabCompletionList(List[String]())
+
     // nothing to do really
     def close = {}
 }

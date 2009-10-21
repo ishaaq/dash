@@ -13,6 +13,9 @@ class JavaScriptClientSession(val id: UUID, val out: RemoteWriter) extends Clien
     // TODO - send args to script
     protected def eval(script: String, args: Array[String]) = engine.eval(new FileReader(script))
 
+    // TODO - tab completion
+    def tabCompletion(prefix: String) = new TabCompletionList(List[String]())
+
     // nothing to do really
     def close = {}
 }

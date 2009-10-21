@@ -29,6 +29,8 @@ class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Acto
               sender ! sessions(id).run(command)
             case Run(id, script, args) =>
               sender ! sessions(id).runScript(script, args)
+            case TabCompletionRequest(id, prefix) =>
+              sender ! sessions(id).tabCompletion(prefix)
             case Bye(id) =>
               sessions(id).close
               sessions - id

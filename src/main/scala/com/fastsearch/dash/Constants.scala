@@ -10,6 +10,7 @@ object Constants {
   val actorName = 'dash
   val portProperty = "com.fastsearch.dash.port"
   val dashHomeProperty = "dash.home"
+  val requestTimeout = 500
   lazy val dashHome = System.getProperty(dashHomeProperty)
   lazy val scriptDir = new File(dashHome, "scripts")
 }

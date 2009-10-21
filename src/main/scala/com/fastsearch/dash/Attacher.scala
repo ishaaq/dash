@@ -4,8 +4,8 @@ import java.io.File
 import com.sun.tools.attach.VirtualMachine
 import collection.jcl.Conversions.convertList
 import scala.actors.remote.Node
+import scala.actors.remote.RemoteActor.select
 import java.net.ServerSocket
-
 
 class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
     def attach = {
@@ -23,9 +23,9 @@ class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
             }
         }
       }
-      val node = Node("127.0.0.1", port)
-      val client = new Client(node, file match {
-                                    case None => new InteractiveMessageFactory
+      val server = select(Node("127.0.0.1", port), Constants.actorName)
+      val client = new Client(server, file match {
+                                    case None => new InteractiveMessageFactory(server)
                                     case Some(script) => new ScriptedMessageFactory(script.getAbsolutePath, args)
                                   })
       client.start

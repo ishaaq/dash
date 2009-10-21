@@ -1,22 +1,20 @@
 package com.fastsearch.dash
 
-import scala.actors.Actor
+import scala.actors.{AbstractActor, Actor}
 import scala.actors.Actor.{loop, actor}
 import scala.actors.remote.RemoteActor
-import scala.actors.remote.RemoteActor.select
 import scala.actors.OutputChannel
 import scala.actors.remote.Node
 import java.util.UUID
 
-class Client(serverNode: Node, messageFactory: MessageFactory) extends Actor {
-    private val server = select(serverNode, Constants.actorName)
-    private val timeout = 500
+class Client(server: AbstractActor, messageFactory: MessageFactory) extends Actor {
+    val id = messageFactory.id
     private val sysOut = System.out
     private val sysErr = System.err
 
     def act {
         link(server)
-        server !! Syn(messageFactory.id)
+        server !! Syn(id)
         val processResponse: PartialFunction[Any, Unit] = {
               case Ack =>
                 println("client Ack received")
@@ -32,7 +30,7 @@ class Client(serverNode: Node, messageFactory: MessageFactory) extends Actor {
               message match {
                 case Bye(_) => {
                   // we'll wait a little while for the server to ack..
-                  server.!?(timeout, message)
+                  server.!?(Constants.requestTimeout, message)
                   //.. and exit
                   System.exit(0)
                 }

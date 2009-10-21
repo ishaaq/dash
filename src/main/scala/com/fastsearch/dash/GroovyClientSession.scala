@@ -1,11 +1,14 @@
 package com.fastsearch.dash
 
-import java.util.{UUID, Map => JMap}
+import java.util.{UUID, Map => JMap, Set => JSet}
 import java.io.{File, FileReader, BufferedReader}
 import java.security.{AccessController, PrivilegedActionException, PrivilegedExceptionAction}
 import java.lang.reflect.Method
 import groovy.lang.{Binding, GroovyShell, GroovyClassLoader}
 import org.codehaus.groovy.runtime.MethodClosure
+
+import scala.collection.jcl.Conversions.convertSet
+
 
 class GroovyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSession {
     private val binding = new Binding
@@ -40,6 +43,21 @@ class GroovyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSes
         } finally {
           binding.setProperty("args", null)
         }
+    }
+
+    def tabCompletion(prefix: String) = {
+      val trimmed = prefix.trim
+      val set: JSet[String] = binding.getVariables.keySet.asInstanceOf[JSet[String]]
+      val matches = set.filter( _.startsWith(trimmed)).map( arg =>
+                                binding.getVariable(arg) match {
+                                    case m: MethodClosure =>
+                                      m.getMaximumNumberOfParameters match {
+                                        case 0 => arg + "()"
+                                        case _ => arg + "("
+                                      }
+                                    case x => arg
+                                  })
+      new TabCompletionList(matches.toList)
     }
 
     private def runScript(scriptStr: String, name: String): AnyRef = {

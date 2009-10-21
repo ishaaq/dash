@@ -1,6 +1,7 @@
 package com.fastsearch.dash
 
 import java.util.UUID
+import scala.actors.Future
 
 @serializable
 abstract sealed class Message
