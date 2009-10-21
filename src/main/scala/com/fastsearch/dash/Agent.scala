@@ -1,12 +1,14 @@
 package com.fastsearch.dash
 
 import java.lang.instrument.Instrumentation
-import Services._
+import Constants._
 
 object Agent {
-  def agentmain(portString: String, instrumentation: Instrumentation) {
-      val port = portString.toInt
-      System.setProperty(Server.portProperty, portString)
+  def agentmain(args: String, instrumentation: Instrumentation) {
+      val arguments = args.split(",")
+      val port = arguments(0).toInt
+      System.setProperty(Constants.portProperty, arguments(0))
+      System.setProperty(Constants.dashHomeProperty, arguments(1))
       val server = new Server(port)
       server.start
   }

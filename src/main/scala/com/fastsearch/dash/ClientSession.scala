@@ -1,36 +1,25 @@
 package com.fastsearch.dash
 
 import java.util.UUID
+import java.io.PrintWriter
 
 trait ClientSession {
     def id: UUID
     def out: RemoteWriter
 
     def run(command: String): Message = tryEval(eval(command))
-
-    // todo work with args as well:
     def runScript(script: String, args: Array[String]): Message = tryEval(eval(script, args))
 
-    private def tryEvaluation(eval: => Any): Message = {
+    private def tryEval(eval: => AnyRef): Message = {
       try {
           eval match {
-            case null => new Response(null)
-            case x => new Response(x.toString)
+            case null => new Success(out.getAndReset, null)
+            case resp => new Success(out.getAndReset, resp.toString)
           }
       } catch {
-        case e => new ErrorResponse(e.getMessage)
-      }
-    }
-
-
-    private def tryEval(eval: => Any): Message = {
-      try {
-          eval match {
-            case null => new Response(null)
-            case x => new Response(x.toString)
-          }
-      } catch {
-        case e => new ErrorResponse(e.getMessage)
+        case err =>
+          err.printStackTrace(out.printWriter)
+          new Error(out.getAndReset, err.getClass + ": " + err.getMessage)
       }
     }
 

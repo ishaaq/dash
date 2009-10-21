@@ -24,6 +24,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val groovy_all = "org.codehaus.groovy" % "groovy-all" % "1.6.3" intransitive
     val jline = "jline" % "jline" % "0.9.93" intransitive
     val args4j = "args4j" % "args4j" % "2.0.16" intransitive
+    val jruby = "org.jruby" % "jruby-complete" % "1.4.0RC1" intransitive
 
     def assemblyExclude(base: PathFinder) = base / "META-INF" ** "*"
 

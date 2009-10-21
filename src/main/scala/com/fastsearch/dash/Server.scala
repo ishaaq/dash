@@ -1,25 +1,29 @@
 package com.fastsearch.dash
 
 import java.util.UUID
-import java.io.Writer
-import scala.actors.Actor
-import scala.actors.Actor._
+import java.io.{Writer, PrintWriter}
+import scala.actors.{Actor, FJTaskScheduler2}
+import scala.actors.Actor.{loop, self}
 import scala.actors.OutputChannel
 import scala.actors.remote.RemoteActor
-import scala.actors.remote.RemoteActor._
-import scala.collection.mutable.Map
+import scala.actors.remote.RemoteActor.{alive, register}
+import scala.collection.mutable.{Map, ListBuffer}
 
 class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Actor {
     private val sessions = Map[UUID, ClientSession]()
+
+    override def scheduler = DaemonScheduler
+
     def act() {
         println("Starting dash server on port: " + port)
         alive(port)
-        register(Server.name, self)
+        register(Constants.actorName, self)
 
         loop {
-          receive {
+          react {
             case Syn(id) =>
-              sessions + ((id, factory(id, new RemoteWriter(sender))))
+              println("client entered: " + id)
+              sessions + ((id, factory(id, new RemoteWriter)))
               sender ! Ack
             case Command(id, command) =>
               sender ! sessions(id).run(command)
@@ -29,22 +33,38 @@ class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Acto
               sessions(id).close
               sessions - id
               println("client leaving")
-              sender ! new Bye(id)
           }
         }
     }
 }
 
-object Server {
-  val name = 'dash
-  val portProperty = "com.fastsearch.dash.port"
+object DaemonScheduler extends FJTaskScheduler2 {
+    setDaemon(true)
 }
 
-class RemoteWriter(sender: OutputChannel[Message]) extends Writer {
-    def close() = {}
-    def flush() = {}
-    def write(chars: Array[Char], offset: Int, length: Int) = {}
+class RemoteWriter extends Writer {
+    private val sb = new StringBuilder
+    private val buffer = new ListBuffer[Output]
 
-    def print(str: String) = sender ! Print(str)
-    def println(str: String) = sender ! Print(str + "\n")
+    val printWriter = new PrintWriter(this, true)
+    def close = flush
+    def flush = {
+      if(sb.length > 0) {
+          append(sb.toString)
+          sb.clear
+       }
+    }
+
+    def write(chars: Array[Char], offset: Int, length: Int) = sb.append(chars, offset, length)
+
+    def print(str: String) = append(str)
+    def println(str: String) = append(str + "\n")
+
+    private def append(str: String) = buffer += new StandardOut(str)
+
+    def getAndReset = {
+      val list = buffer.toList
+      buffer.clear
+      list
+    }
 }

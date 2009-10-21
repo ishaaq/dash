@@ -10,19 +10,42 @@ import org.codehaus.groovy.runtime.MethodClosure
 class GroovyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSession {
     private val binding = new Binding
     private val shell = init
+    private val scriptClass = "dash_script"
 
     private val field = classOf[GroovyClassLoader].getDeclaredField("classCache")
     field.setAccessible(true)
 
+    eval("load={script->dashSession.eval(script, new String[0])}")
+    eval("bootstrap.groovy", null)
+
     private def init = {
         binding.setProperty("out", out)
+        binding.setProperty("dashSession", this)
         new GroovyShell(classOf[GroovyClientSession].getClassLoader, binding)
     }
 
-    protected def eval(command: String): AnyRef = {
+    protected def eval(command: String) = runScript(command, scriptClass)
+
+    protected def eval(scriptPath: String, args: Array[String]) = {
+        val maybeScriptFile = new File(Constants.scriptDir, scriptPath)
+        val file = if(maybeScriptFile.exists && maybeScriptFile.isFile) maybeScriptFile else new File(scriptPath)
+        val reader = new BufferedReader(new FileReader(file))
+        val sb = new StringBuilder
+        while(reader.ready) {
+          sb.append(reader.readLine).append('\n')
+        }
+        try {
+            binding.setProperty("args", args)
+            runScript(sb.toString, scriptClass)
+        } finally {
+          binding.setProperty("args", null)
+        }
+    }
+
+    private def runScript(scriptStr: String, name: String): AnyRef = {
       var clazz: Class[_] = null
       try {
-        val script = shell.parse(command, "dash_script")
+        val script = shell.parse(scriptStr, name)
         clazz = script.getClass
         val result = if(clazz.getDeclaredMethods.exists(_.getName == "main")) {
             script.run()
@@ -46,16 +69,6 @@ class GroovyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSes
       }
     }
 
-    protected def eval(script: String, args: Array[String]) = {
-        val reader = new BufferedReader(new FileReader(new File(script)))
-        val sb = new StringBuilder
-        while(reader.ready) {
-          sb.append(reader.readLine).append('\n')
-        }
-        binding.setProperty("args", args)
-        eval(sb.toString)
-    }
-
     // nothing to do really
     def close = {}
 
@@ -66,7 +79,6 @@ class GroovyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSes
                     field.get(classLoader).asInstanceOf[JMap[_, _]]
                 }
             })
-
     }
 }
 

@@ -1,8 +1,8 @@
 package com.fastsearch.dash
 
 import java.io.File
-import com.sun.tools.attach._
-import collection.jcl.Conversions._
+import com.sun.tools.attach.VirtualMachine
+import collection.jcl.Conversions.convertList
 import scala.actors.remote.Node
 import java.net.ServerSocket
 
@@ -13,11 +13,11 @@ class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
         case Left(status) => exit(status)
         case Right(vm) => {
             val props = vm.getSystemProperties
-            if(props.containsKey(Server.portProperty)) {
-              props.getProperty(Server.portProperty).toInt
+            if(props.containsKey(Constants.portProperty)) {
+              props.getProperty(Constants.portProperty).toInt
             } else {
               val port = getEphemeralPort
-              vm.loadAgent(System.getProperty("user.dir") + File.separator + "dash.jar", port.toString)
+              vm.loadAgent(Constants.dashHome + File.separator + "dash.jar", port.toString + "," + Constants.dashHome)
               vm.detach
               port
             }

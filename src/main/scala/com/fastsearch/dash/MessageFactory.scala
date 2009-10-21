@@ -1,7 +1,7 @@
 package com.fastsearch.dash
 
 import java.util.UUID
-import jline._
+import jline.{ConsoleReader, History}
 import java.io.{BufferedReader, File, FileReader}
 import scala.collection.immutable.Queue
 

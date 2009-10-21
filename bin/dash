@@ -1,0 +1,6 @@
+#!/bin/bash
+DIR=`dirname $0`
+DASH_HOME=`readlink -fn $DIR`
+echo $DASH_HOME
+exit
+java -Xmx512M -Ddash.home=$DASH_HOME -jar dash.jar $@
