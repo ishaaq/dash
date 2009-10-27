@@ -1,3 +1,4 @@
+/*
 package com.fastsearch.dash
 
 import java.util.UUID
@@ -25,3 +26,4 @@ class JRubyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSess
 object JRubyClientSessionFactory extends ClientSessionFactory {
     def apply(id: UUID, out: RemoteWriter) = new JRubyClientSession(id, out)
 }
+*/

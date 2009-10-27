@@ -1,3 +1,4 @@
+/*
 package com.fastsearch.dash
 
 import java.util.{UUID, Map => JMap, Set => JSet}
@@ -103,5 +104,4 @@ class GroovyClientSession(val id: UUID, val out: RemoteWriter) extends ClientSes
 object GroovyClientSessionFactory extends ClientSessionFactory {
     def apply(id: UUID, out: RemoteWriter) = new GroovyClientSession(id, out)
 }
-
-
+*/
