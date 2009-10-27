@@ -3,8 +3,8 @@ package com.fastsearch.dash
 import java.io.File
 
 object Constants {
-    //implicit val sessionFactory = JavaScriptClientSessionFactory
-    implicit val sessionFactory = GroovyClientSessionFactory
+    implicit val sessionFactory = JavaScriptClientSessionFactory
+    //implicit val sessionFactory = GroovyClientSessionFactory
     //implicit val sessionFactory = JRubyClientSessionFactory
 
   val actorName = 'dash

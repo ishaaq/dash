@@ -1,7 +1,7 @@
 package com.fastsearch.dash
 
 import java.util.UUID
-import java.io.PrintWriter
+import java.io.{PrintWriter, File, BufferedReader, FileReader}
 
 trait ClientSession {
     def id: UUID
@@ -21,6 +21,15 @@ trait ClientSession {
           err.printStackTrace(out.printWriter)
           new Error(out.getAndReset, err.getClass + ": " + err.getMessage)
       }
+    }
+
+    /**
+     * A script can be resolved from an absolute path, failing which we try to resolve it from the script dir.
+     */
+    def resolveScriptReader(scriptPath: String) = {
+        val maybeScriptFile = new File(scriptPath)
+        val file = if(maybeScriptFile.exists && maybeScriptFile.isFile) maybeScriptFile else new File(Constants.scriptDir, scriptPath)
+        new BufferedReader(new FileReader(file))
     }
 
     def close: Unit
