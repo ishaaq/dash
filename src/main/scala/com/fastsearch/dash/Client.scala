@@ -6,11 +6,12 @@ import scala.actors.remote.RemoteActor
 import scala.actors.OutputChannel
 import scala.actors.remote.Node
 import java.util.UUID
+import Constants._
 
 class Client(server: AbstractActor, messageFactory: MessageFactory) extends Actor {
     val id = messageFactory.id
-    private val sysOut = System.out
-    private val sysErr = System.err
+    private val out: {def print(str: String)} = messageFactory.out
+    private val err: {def print(str: String)} = messageFactory.err
 
     def act {
         link(server)
@@ -20,10 +21,10 @@ class Client(server: AbstractActor, messageFactory: MessageFactory) extends Acto
                 println("client Ack received")
               case Success(outs, response) =>
                 print(outs)
-                sysOut.println(">> " + response + "\n")
+                out.print(">> " + response + '\n')
               case Error(outs, response) =>
                 print(outs)
-                sysOut.println("ERR! " + response)
+                err.print("ERR! " + response + '\n')
         }
         loop {
               val message = messageFactory.get
@@ -40,7 +41,7 @@ class Client(server: AbstractActor, messageFactory: MessageFactory) extends Acto
     }
 
     private def print(outs: List[Output]): Unit = outs.foreach ( _ match {
-      case StandardOut(str) => sysOut.print(str)
-      case StandardErr(str) => sysErr.print(str)
+      case StandardOut(str) => out.print(str)
+      case StandardErr(str) => err.print(str)
     })
 }
