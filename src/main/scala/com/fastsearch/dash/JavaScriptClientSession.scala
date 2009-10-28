@@ -1,11 +1,10 @@
 package com.fastsearch.dash
 
-import java.util.UUID
 import javax.script.{ScriptEngineManager, ScriptContext}
 import scala.collection.jcl.Conversions.convertSet
 import _root_.sun.org.mozilla.javascript.internal.NativeArray
 
-class JavaScriptClientSession(val id: UUID, val out: RemoteWriter) extends ClientSession {
+class JavaScriptClientSession(val out: RemoteWriter) extends ClientSession {
     private val argStr = "arguments"
     private val shellArg = "__shell__"
 
@@ -72,7 +71,7 @@ class JavaScriptClientSession(val id: UUID, val out: RemoteWriter) extends Clien
 }
 
 object JavaScriptClientSessionFactory extends ClientSessionFactory {
-    def apply(id: UUID, out: RemoteWriter) = new JavaScriptClientSession(id, out)
+    def apply(out: RemoteWriter) = new JavaScriptClientSession(out)
 }
 
 object ScriptEngineFactory {

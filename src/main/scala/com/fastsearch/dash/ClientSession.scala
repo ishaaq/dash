@@ -1,10 +1,8 @@
 package com.fastsearch.dash
 
-import java.util.UUID
 import java.io.{PrintWriter, File, BufferedReader, FileReader}
 
 trait ClientSession {
-    def id: UUID
     def out: RemoteWriter
 
     def run(command: String): Message = tryEval(eval(command))
@@ -39,6 +37,6 @@ trait ClientSession {
 }
 
 trait ClientSessionFactory {
-    def apply(id: UUID, out: RemoteWriter): ClientSession
+    def apply(out: RemoteWriter): ClientSession
 }
 

@@ -3,32 +3,20 @@ package com.fastsearch.dash
 import java.io.File
 import com.sun.tools.attach.VirtualMachine
 import collection.jcl.Conversions.convertList
-import scala.actors.remote.Node
-import scala.actors.remote.RemoteActor.select
 import java.net.ServerSocket
 
 class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
     def attach = {
-      val port = attachVm(pid) match {
+      val port = getEphemeralPort
+      val client = new Client(port, file, args)
+      attachVm(pid) match {
         case Left(status) => exit(status)
         case Right(vm) => {
-            val props = vm.getSystemProperties
-            if(props.containsKey(Constants.portProperty)) {
-              props.getProperty(Constants.portProperty).toInt
-            } else {
-              val port = getEphemeralPort
-              vm.loadAgent(Constants.dashHome + File.separator + "dash.jar", port.toString + "," + Constants.dashHome)
-              vm.detach
-              port
-            }
+          client.start
+          vm.loadAgent(Constants.dashHome + File.separator + "dash.jar", port.toString + "," + Constants.dashHome)
+          vm.detach
         }
       }
-      val server = select(Node("127.0.0.1", port), Constants.actorName)
-      val client = new Client(server, file match {
-                                    case None => new InteractiveMessageFactory(server)
-                                    case Some(script) => new ScriptedMessageFactory(script.getAbsolutePath, args)
-                                  })
-      client.start
     }
 
     /**

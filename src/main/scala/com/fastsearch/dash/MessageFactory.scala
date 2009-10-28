@@ -1,19 +1,14 @@
 package com.fastsearch.dash
 
-import java.util.UUID
-import java.io.{BufferedReader, File, FileReader}
-import java.util.{List => JList, ArrayList => AList, Collections}
+import java.io.File
+import java.util.{List => JList, Collections}
 import jline.{ConsoleReader, History, CandidateListCompletionHandler, Completor}
-import jline.ANSIBuffer
-import scala.collection.immutable.Queue
-import scala.actors.Actor.{actor, link, exit}
-import scala.actors.{Future, AbstractActor}
+import scala.actors.AbstractActor
 import scala.actors.remote.Node
 import Constants._
 
 trait MessageFactory {
     def get: Message
-    val id = UUID.randomUUID
     def out: {def print(str: String)}
     def err: {def print(str: String)}
 }
@@ -29,15 +24,15 @@ class InteractiveMessageFactory(server: AbstractActor) extends MessageFactory wi
 
     def get = {
       console.readLine(green("dash> ")) match {
-        case null => Bye(id)
-        case eval => new Eval(id, eval)
+        case null => Bye
+        case eval => new Eval(eval)
       }
     }
 
     override def complete(buffer: String, cursor: Int, candidateList: JList[_]): Int = {
         val list = candidateList.asInstanceOf[JList[String]]
         if(buffer.trim.length > 0) {
-            server !? (Constants.requestTimeout, new TabCompletionRequest(id, buffer)) match {
+            server !? (Constants.requestTimeout, new TabCompletionRequest(buffer)) match {
               case None => buffer.length
               case Some(x) => x match {
                 case TabCompletionList(completionList) =>
@@ -63,7 +58,7 @@ class ScriptedMessageFactory(script: String, args: Array[String]) extends Messag
     def get = hasRun match {
       case false =>
         hasRun = true
-        new Run(id, script, args)
-      case true => new Bye(id)
+        new Run(script, args)
+      case true => Bye
     }
 }
