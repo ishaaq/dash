@@ -25,8 +25,8 @@ class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Acto
               println("client entered: " + id)
               sessions + ((id, factory(id, new RemoteWriter)))
               sender ! Ack
-            case Command(id, command) =>
-              sender ! sessions(id).run(command)
+            case Eval(id, eval) =>
+              sender ! sessions(id).run(eval)
             case Run(id, script, args) =>
               sender ! sessions(id).runScript(script, args)
             case TabCompletionRequest(id, prefix) =>

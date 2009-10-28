@@ -30,7 +30,7 @@ class InteractiveMessageFactory(server: AbstractActor) extends MessageFactory wi
     def get = {
       console.readLine(green("dash> ")) match {
         case null => Bye(id)
-        case command => new Command(id, command)
+        case eval => new Eval(id, eval)
       }
     }
 

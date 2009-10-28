@@ -14,7 +14,7 @@ case class TabCompletionRequest(id: UUID, prefix: String) extends Message
 case class TabCompletionList(list: List[String]) extends Message
 
 case class Run(id: UUID, filePath: String, args: Array[String]) extends Message
-case class Command(id: UUID, command: String) extends Message
+case class Eval(id: UUID, command: String) extends Message
 
 case class Success(out: List[Output], response: String) extends Message
 case class Error(out: List[Output], response: String) extends Message
