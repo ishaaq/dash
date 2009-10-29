@@ -1,19 +1,23 @@
 package com.fastsearch.dash
 
 import java.io.File
+import java.util.UUID
 import com.sun.tools.attach.VirtualMachine
 import collection.jcl.Conversions.convertList
 import java.net.ServerSocket
 
 class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
+    val dashHome = System.getProperty(Constants.dashHomeClientProperty)
+
+    val id = Symbol(UUID.randomUUID.toString)
     def attach = {
       val port = getEphemeralPort
-      val client = new Client(port, file, args)
+      val client = new Client(id, port, file, args)
       attachVm(pid) match {
         case Left(status) => exit(status)
         case Right(vm) => {
           client.start
-          vm.loadAgent(Constants.dashHome + File.separator + "dash.jar", port.toString + "," + Constants.dashHome)
+          vm.loadAgent(dashHome + File.separator + "dash.jar", port.toString + "," + dashHome +"," + id.name)
           vm.detach
         }
       }

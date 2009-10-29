@@ -7,7 +7,7 @@ import scala.actors.remote.{Node, RemoteActor}
 import scala.actors.remote.RemoteActor.select
 import scala.collection.mutable.ListBuffer
 
-class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Actor {
+class Server(id: Symbol, port: Int, dashHome: String)(implicit val factory: ClientSessionFactory) extends Actor {
     trapExit = true
 
     override def scheduler = new FJTaskScheduler2 {
@@ -15,15 +15,17 @@ class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Acto
     }
 
     def act() {
-        val client = select(Node("127.0.0.1", port), Constants.actorName)
+        val client = select(Node("127.0.0.1", port), id)
         link(client)
-        println("Connected to dash client on port: " + port)
+        println("Connected to dash client: " + id)
         client ! Ack
-        val session = factory(new RemoteWriter)
+        val session = factory(dashHome, new RemoteWriter)
 
         loop {
+          println ("start-of-loop: " + id)
           receive {
             case Eval(eval) =>
+              println("run eval")
               sender ! session.run(eval)
             case Run(script, args) =>
               sender ! session.runScript(script, args)
@@ -38,6 +40,7 @@ class Server(port: Int)(implicit val factory: ClientSessionFactory) extends Acto
               session.close
               println("client exiting")
               exit
+            case x => println("unexpected message: " + x)
           }
         }
     }

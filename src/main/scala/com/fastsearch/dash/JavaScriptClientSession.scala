@@ -4,7 +4,7 @@ import javax.script.{ScriptEngineManager, ScriptContext}
 import scala.collection.jcl.Conversions.convertSet
 import _root_.sun.org.mozilla.javascript.internal.NativeArray
 
-class JavaScriptClientSession(val out: RemoteWriter) extends ClientSession {
+class JavaScriptClientSession(val dashHome: String, val out: RemoteWriter) extends ClientSession {
     private val argStr = "arguments"
     private val shellArg = "__shell__"
 
@@ -71,7 +71,7 @@ class JavaScriptClientSession(val out: RemoteWriter) extends ClientSession {
 }
 
 object JavaScriptClientSessionFactory extends ClientSessionFactory {
-    def apply(out: RemoteWriter) = new JavaScriptClientSession(out)
+    def apply(dashHome: String, out: RemoteWriter) = new JavaScriptClientSession(dashHome, out)
 }
 
 object ScriptEngineFactory {

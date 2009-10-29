@@ -3,6 +3,7 @@ package com.fastsearch.dash
 import java.io.{PrintWriter, File, BufferedReader, FileReader}
 
 trait ClientSession {
+    val dashHome: String
     def out: RemoteWriter
 
     def run(command: String): Message = tryEval(eval(command))
@@ -26,7 +27,7 @@ trait ClientSession {
      */
     def resolveScriptReader(scriptPath: String) = {
         val maybeScriptFile = new File(scriptPath)
-        val file = if(maybeScriptFile.exists && maybeScriptFile.isFile) maybeScriptFile else new File(Constants.scriptDir, scriptPath)
+        val file = if(maybeScriptFile.exists && maybeScriptFile.isFile) maybeScriptFile else new File(Constants.scriptDir(dashHome), scriptPath)
         new BufferedReader(new FileReader(file))
     }
 
@@ -37,6 +38,6 @@ trait ClientSession {
 }
 
 trait ClientSessionFactory {
-    def apply(out: RemoteWriter): ClientSession
+    def apply(dashHome: String, out: RemoteWriter): ClientSession
 }
 
