@@ -3,17 +3,15 @@ package com.fastsearch.dash
 import java.io.File
 import java.util.{List => JList, Collections}
 import jline.{ConsoleReader, History, CandidateListCompletionHandler, Completor}
-import scala.actors.AbstractActor
-import scala.actors.remote.Node
 import Constants._
 
 trait MessageFactory {
-    def get: Message
+    def get: Req
     def out: {def print(str: String)}
     def err: {def print(str: String)}
 }
 
-class InteractiveMessageFactory(server: AbstractActor) extends MessageFactory with Completor {
+class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with Completor {
     private val console = new ConsoleReader
     val out = System.out
     val err = new Decorator(System.err, red)
@@ -24,7 +22,7 @@ class InteractiveMessageFactory(server: AbstractActor) extends MessageFactory wi
 
     def get = {
       console.readLine(green("dash> ")) match {
-        case null => Bye
+        case null => Bye()
         case eval => new Eval(eval)
       }
     }
@@ -32,13 +30,18 @@ class InteractiveMessageFactory(server: AbstractActor) extends MessageFactory wi
     override def complete(buffer: String, cursor: Int, candidateList: JList[_]): Int = {
         val list = candidateList.asInstanceOf[JList[String]]
         if(buffer.trim.length > 0) {
-            server !? (Constants.requestTimeout, new TabCompletionRequest(buffer)) match {
+            server !? (new TabCompletionRequest(buffer)) match {
               case None => buffer.length
               case Some(x) => x match {
-                case TabCompletionList(completionList) =>
+                case TabCompletionList(_, completionList) => {
                   completionList.foreach(list.add(_))
                   Collections.sort(list)
                   0
+                }
+                case x => {
+                  err.print("Invalid response: " + x)
+                  0
+                }
               }
             }
         } else {
@@ -59,6 +62,6 @@ class ScriptedMessageFactory(script: String, args: Array[String]) extends Messag
       case false =>
         hasRun = true
         new Run(script, args)
-      case true => Bye
+      case true => Bye()
     }
 }

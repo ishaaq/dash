@@ -1,5 +1,6 @@
 package com.fastsearch.dash
 
+import java.util.UUID
 import javax.script.{ScriptEngineManager, ScriptContext}
 import scala.collection.jcl.Conversions.convertSet
 import _root_.sun.org.mozilla.javascript.internal.NativeArray
@@ -48,9 +49,9 @@ class JavaScriptClientSession(val dashHome: String, val out: RemoteWriter) exten
 
     def run(script: String, args: NativeArray): AnyRef = eval(script, convertArgs(args))
 
-    def tabCompletion(prefix: String) = {
+    def tabCompletion(id: UUID, prefix: String) = {
       val trimmed = prefix.trim
-      new TabCompletionList(bindings.keySet.filter(_.startsWith(trimmed)).toList)
+      new TabCompletionList(id, bindings.keySet.filter(_.startsWith(trimmed)).toList)
     }
 
     private def convertArgs(jsArr: NativeArray): Array[String] = {

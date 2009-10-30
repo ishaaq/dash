@@ -1,19 +1,28 @@
 package com.fastsearch.dash
 
+import java.util.UUID
+
+sealed trait Message
+
+import org.apache.mina.filter.reqres.{Request => MRequest}
+class Request(req: Req) extends MRequest(req.id, req, Constants.requestTimeout) {
+  val id = getId.asInstanceOf[UUID]
+}
+
+sealed abstract case class Req() extends Message {
+  val id = UUID.randomUUID
+}
+
+case class Bye() extends Req
+case class TabCompletionRequest(prefix: String) extends Req
+case class Run(filePath: String, args: Array[String]) extends Req
+case class Eval(command: String) extends Req
+
 @serializable
-abstract sealed class Message
-
-case object Ack extends Message
-case object Bye extends Message
-
-case class TabCompletionRequest(prefix: String) extends Message
-case class TabCompletionList(list: List[String]) extends Message
-
-case class Run(filePath: String, args: Array[String]) extends Message
-case class Eval(command: String) extends Message
-
-case class Success(out: List[Output], response: String) extends Message
-case class Error(out: List[Output], response: String) extends Message
+sealed abstract case class Resp(val reqId: UUID) extends Message
+case class TabCompletionList(id: UUID, list: List[String]) extends Resp(id)
+case class Success(id: UUID, out: List[Output], response: String) extends Resp(id)
+case class Error(id: UUID, out: List[Output], response: String) extends Resp(id)
 
 @serializable
 sealed class Output(val string: String)

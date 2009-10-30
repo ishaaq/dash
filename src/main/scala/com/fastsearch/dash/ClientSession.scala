@@ -1,24 +1,25 @@
 package com.fastsearch.dash
 
+import java.util.UUID
 import java.io.{PrintWriter, File, BufferedReader, FileReader}
 
 trait ClientSession {
     val dashHome: String
     def out: RemoteWriter
 
-    def run(command: String): Message = tryEval(eval(command))
-    def runScript(script: String, args: Array[String]): Message = tryEval(eval(script, args))
+    def run(reqId: UUID, command: String): Message = tryEval(reqId, eval(command))
+    def runScript(reqId: UUID, script: String, args: Array[String]): Message = tryEval(reqId, eval(script, args))
 
-    private def tryEval(eval: => AnyRef): Message = {
+    private def tryEval(reqId: UUID, eval: => AnyRef): Message = {
       try {
           eval match {
-            case null => new Success(out.getAndReset, null)
-            case resp => new Success(out.getAndReset, resp.toString)
+            case null => new Success(reqId, out.getAndReset, null)
+            case resp => new Success(reqId, out.getAndReset, resp.toString)
           }
       } catch {
         case err =>
           err.printStackTrace(out.printWriter)
-          new Error(out.getAndReset, err.getClass + ": " + err.getMessage)
+          new Error(reqId, out.getAndReset, err.getClass + ": " + err.getMessage)
       }
     }
 
@@ -34,7 +35,7 @@ trait ClientSession {
     def close: Unit
     protected def eval(command: String): AnyRef
     protected def eval(script: String, args: Array[String]): AnyRef
-    def tabCompletion(prefix: String): TabCompletionList
+    def tabCompletion(reqId: UUID, prefix: String): TabCompletionList
 }
 
 trait ClientSessionFactory {

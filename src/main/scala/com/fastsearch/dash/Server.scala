@@ -1,48 +1,27 @@
 package com.fastsearch.dash
 
 import java.io.{Writer, PrintWriter}
-import scala.actors.{Actor, Exit, FJTaskScheduler2}
-import scala.actors.Actor.{loop, self}
-import scala.actors.remote.{Node, RemoteActor}
-import scala.actors.remote.RemoteActor.select
 import scala.collection.mutable.ListBuffer
+import java.util.UUID
 
-class Server(id: Symbol, port: Int, dashHome: String)(implicit val factory: ClientSessionFactory) extends Actor {
-    trapExit = true
+class Server(id: UUID, port: Int, dashHome: String)(implicit val factory: ClientSessionFactory) {
+    val client = new ClientPeer(port, receive)
+    val session = factory(dashHome, new RemoteWriter)
 
-    override def scheduler = new FJTaskScheduler2 {
-        setDaemon(true)
-    }
-
-    def act() {
-        val client = select(Node("127.0.0.1", port), id)
-        link(client)
-        println("Connected to dash client: " + id)
-        client ! Ack
-        val session = factory(dashHome, new RemoteWriter)
-
-        loop {
-          println ("start-of-loop: " + id)
-          receive {
+    def receive(req: Req): Unit = {
+      val reqId = req.id
+      req match {
             case Eval(eval) =>
-              println("run eval")
-              sender ! session.run(eval)
+              client ! session.run(reqId, eval)
             case Run(script, args) =>
-              sender ! session.runScript(script, args)
+              client ! session.runScript(reqId, script, args)
             case TabCompletionRequest(prefix) =>
-              sender ! session.tabCompletion(prefix)
-            case Bye =>
+              client ! session.tabCompletion(reqId, prefix)
+            case Bye() =>
               session.close
-              println("client leaving")
-              sender ! Bye
-              exit
-            case Exit(from, _) =>
-              session.close
-              println("client exiting")
-              exit
+              println("dash client leaving: " + id)
             case x => println("unexpected message: " + x)
-          }
-        }
+      }
     }
 }
 

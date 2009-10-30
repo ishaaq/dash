@@ -8,29 +8,17 @@ import java.net.ServerSocket
 
 class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
     val dashHome = System.getProperty(Constants.dashHomeClientProperty)
+    val id = UUID.randomUUID
 
-    val id = Symbol(UUID.randomUUID.toString)
     def attach = {
-      val port = getEphemeralPort
-      val client = new Client(id, port, file, args)
+      val client = new Client(id, file, args)
       attachVm(pid) match {
         case Left(status) => exit(status)
         case Right(vm) => {
-          client.start
-          vm.loadAgent(dashHome + File.separator + "dash.jar", port.toString + "," + dashHome +"," + id.name)
+          vm.loadAgent(dashHome + File.separator + "dash.jar", client.port.toString + "," + dashHome +"," + id)
           vm.detach
         }
       }
-    }
-
-    /**
-     * Its a shame to have to do this this way...
-     */
-    private def getEphemeralPort() = {
-      val tmpSocket = new ServerSocket(0)
-      val port = tmpSocket.getLocalPort
-      tmpSocket.close
-      port
     }
 
     private def attachVm(pid: Option[Int]): Either[Int, VirtualMachine] = {
