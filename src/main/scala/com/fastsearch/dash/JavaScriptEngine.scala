@@ -5,14 +5,16 @@ import javax.script.{ScriptEngineManager, ScriptContext}
 import scala.collection.jcl.Conversions.convertSet
 import _root_.sun.org.mozilla.javascript.internal.NativeArray
 
-class JavaScriptClientSession(val dashHome: String, val out: RemoteWriter) extends ClientSession {
+trait JavaScriptEngine extends ScriptEngine {
+    this: ClientSession =>
+
     private val argStr = "arguments"
     private val shellArg = "__shell__"
 
-    private val engine = ScriptEngineFactory.get
-    private val ctxt = engine.getContext
-    private val bindings = ctxt.getBindings(ScriptContext.ENGINE_SCOPE)
-    ctxt.setWriter(out)
+    private var wrapper = new EngineWrapper(out)
+
+    private def engine = wrapper.engine
+    private def bindings = wrapper.bindings
 
     /**
      * Creates a special 'load' function to be able to load scripts. This fn is called
@@ -33,7 +35,7 @@ class JavaScriptClientSession(val dashHome: String, val out: RemoteWriter) exten
 
     protected def eval(command: String) = {
         createLoadFn
-        engine.eval(command)
+        wrapper.engine.eval(command)
     }
 
     protected def eval(script: String, args: Array[String]) = {
@@ -50,6 +52,7 @@ class JavaScriptClientSession(val dashHome: String, val out: RemoteWriter) exten
     def run(script: String, args: NativeArray): AnyRef = eval(script, convertArgs(args))
 
     def tabCompletion(id: UUID, prefix: String) = {
+      createLoadFn
       val trimmed = prefix.trim
       new TabCompletionList(id, bindings.keySet.filter(_.startsWith(trimmed)).toList)
     }
@@ -67,15 +70,17 @@ class JavaScriptClientSession(val dashHome: String, val out: RemoteWriter) exten
       arr
     }
 
-    // nothing to do really
-    def close = {}
+    def reset = bindings.clear
+
+    def close = {
+      reset
+      wrapper = null
+    }
 }
 
-object JavaScriptClientSessionFactory extends ClientSessionFactory {
-    def apply(dashHome: String, out: RemoteWriter) = new JavaScriptClientSession(dashHome, out)
-}
-
-object ScriptEngineFactory {
-  private val factory = new ScriptEngineManager
-  def get = factory.getEngineByName("JavaScript")
+class EngineWrapper(out: RemoteWriter) {
+    val engine = new ScriptEngineManager().getEngineByName("JavaScript")
+    def ctxt = engine.getContext
+    def bindings = ctxt.getBindings(ScriptContext.ENGINE_SCOPE)
+    ctxt.setWriter(out)
 }

@@ -3,13 +3,7 @@ package com.fastsearch.dash
 import java.util.UUID
 import java.io.{PrintWriter, File, BufferedReader, FileReader}
 
-trait ClientSession {
-    val dashHome: String
-    def out: RemoteWriter
-
-    def run(reqId: UUID, command: String): Message = tryEval(reqId, eval(command))
-    def runScript(reqId: UUID, script: String, args: Array[String]): Message = tryEval(reqId, eval(script, args))
-
+abstract class ClientSession(val dashHome: String, val out: RemoteWriter) extends ScriptEngine {
     private def tryEval(reqId: UUID, eval: => AnyRef): Message = {
       try {
           eval match {
@@ -28,17 +22,10 @@ trait ClientSession {
      */
     def resolveScriptReader(scriptPath: String) = {
         val maybeScriptFile = new File(scriptPath)
-        val file = if(maybeScriptFile.exists && maybeScriptFile.isFile) maybeScriptFile else new File(Constants.scriptDir(dashHome), scriptPath)
+        val file = if(maybeScriptFile.exists && maybeScriptFile.isFile) maybeScriptFile else new File(Config.scriptDir(dashHome), scriptPath)
         new BufferedReader(new FileReader(file))
     }
 
-    def close: Unit
-    protected def eval(command: String): AnyRef
-    protected def eval(script: String, args: Array[String]): AnyRef
-    def tabCompletion(reqId: UUID, prefix: String): TabCompletionList
+    def run(reqId: UUID, command: String): Message = tryEval(reqId, eval(command))
+    def runScript(reqId: UUID, script: String, args: Array[String]): Message = tryEval(reqId, eval(script, args))
 }
-
-trait ClientSessionFactory {
-    def apply(dashHome: String, out: RemoteWriter): ClientSession
-}
-

@@ -9,20 +9,22 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.transport.socket.nio.NioProcessor
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
 
-class ClientPeer(port: Int, receive: Req => Unit) {
+class ClientPeer(port: Int, receive: Req => Unit, close: => Unit) {
+    private val executor = Executors.newCachedThreadPool(DaemonThreadFactory)
     private val connector = {
-        val executor = Executors.newCachedThreadPool(DaemonThreadFactory)
         val connector = new NioSocketConnector(executor, new NioProcessor(executor))
-        connector.setConnectTimeoutMillis(Constants.requestTimeout)
+        connector.setConnectTimeoutMillis(Config.requestTimeout)
         val chain = connector.getFilterChain()
         chain.addLast("codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()))
-//        chain.addLast("logger", new org.apache.mina.filter.logging.LoggingFilter)
+        if(Config.logging) {
+            chain.addLast("logger", new org.apache.mina.filter.logging.LoggingFilter)
+        }
         connector.setHandler(new ServerSessionHandler)
         connector
     }
 
     private val ioSession = {
-        val future = connector.connect(new InetSocketAddress(Constants.localHost, port))
+        val future = connector.connect(new InetSocketAddress(Config.localHost, port))
         future.awaitUninterruptibly
         future.getSession
     }
@@ -35,8 +37,13 @@ class ClientPeer(port: Int, receive: Req => Unit) {
         override def messageReceived(ioSession: IoSession, message: AnyRef) = {
             message match {
               case req: Req => receive(req)
-              case x => println("Unexpected request: " + x)
+              case x => println("Unexpected dash request: " + x)
             }
+        }
+
+        override def sessionClosed(ioSession: IoSession) = {
+          close
+          executor.shutdown
         }
     }
 }

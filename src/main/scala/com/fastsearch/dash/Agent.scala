@@ -1,7 +1,7 @@
 package com.fastsearch.dash
 
 import java.lang.instrument.Instrumentation
-import Constants._
+import Config._
 import java.util.UUID
 
 object Agent {

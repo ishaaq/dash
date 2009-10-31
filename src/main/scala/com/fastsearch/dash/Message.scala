@@ -5,7 +5,7 @@ import java.util.UUID
 sealed trait Message
 
 import org.apache.mina.filter.reqres.{Request => MRequest}
-class Request(req: Req) extends MRequest(req.id, req, Constants.requestTimeout) {
+class Request(req: Req) extends MRequest(req.id, req, Config.requestTimeout) {
   val id = getId.asInstanceOf[UUID]
 }
 

@@ -1,22 +1,24 @@
 package com.fastsearch.dash
 
-import Constants._
+import Config._
 import java.net.InetSocketAddress
 import org.apache.mina.filter.codec.ProtocolCodecFilter
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.filter.reqres.RequestResponseFilter
-import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
-class ServerPeer(start: => Unit) {
+class ServerPeer(start: => Unit, out: => Printer, err: => Printer) {
   private var session: IoSession = _
   private val executor = new ScheduledThreadPoolExecutor(5)
   lazy val acceptor = {
       val acc = new NioSocketAcceptor
       val chain = acc.getFilterChain
       chain.addLast("codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()))
-//      chain.addLast("logger", new org.apache.mina.filter.logging.LoggingFilter)
+      if(logging) {
+          chain.addLast("logger", new org.apache.mina.filter.logging.LoggingFilter)
+      }
       chain.addLast("reqresp", new RequestResponseFilter(new RespInspector, executor))
       acc.setHandler(new ClientSessionHandler)
       acc.bind(new InetSocketAddress(localHost, 0))
@@ -36,7 +38,7 @@ class ServerPeer(start: => Unit) {
     val resp = request.awaitResponse
     resp.getMessage match {
       case resp: Resp => Some(resp)
-      case x => { println("unexpected response: " + x); None }
+      case x => { err.println("unexpected response: " + x); None }
     }
   }
 
@@ -48,6 +50,14 @@ class ServerPeer(start: => Unit) {
           executor.execute(new Runnable {
             def run = start
           })
+          executor.scheduleWithFixedDelay(new Runnable{
+                              def run = {
+                                if(!session.isConnected) {
+                                    err.println("Lost connection! Shutting down...")
+                                    exit(1)
+                                }
+                              }
+                            }, requestTimeout, requestTimeout, TimeUnit.MILLISECONDS)
       }
       // TODO - perhaps close the server socket here - to stop
       // any other client sockets?

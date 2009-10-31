@@ -3,10 +3,11 @@ package com.fastsearch.dash
 import java.io.{Writer, PrintWriter}
 import scala.collection.mutable.ListBuffer
 import java.util.UUID
+import Config.clientSession
 
-class Server(id: UUID, port: Int, dashHome: String)(implicit val factory: ClientSessionFactory) {
-    val client = new ClientPeer(port, receive)
-    val session = factory(dashHome, new RemoteWriter)
+class Server(id: UUID, port: Int, dashHome: String) {
+    val client = new ClientPeer(port, receive, close)
+    val session = clientSession(dashHome, new RemoteWriter)
 
     def receive(req: Req): Unit = {
       val reqId = req.id
@@ -17,11 +18,13 @@ class Server(id: UUID, port: Int, dashHome: String)(implicit val factory: Client
               client ! session.runScript(reqId, script, args)
             case TabCompletionRequest(prefix) =>
               client ! session.tabCompletion(reqId, prefix)
-            case Bye() =>
-              session.close
-              println("dash client leaving: " + id)
-            case x => println("unexpected message: " + x)
+            case x => println("unexpected dash message: " + x)
       }
+    }
+
+    private def close: Unit = {
+      session.close
+      println("dash client left: " + id)
     }
 }
 

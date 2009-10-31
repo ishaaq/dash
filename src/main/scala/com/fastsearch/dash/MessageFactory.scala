@@ -3,12 +3,12 @@ package com.fastsearch.dash
 import java.io.File
 import java.util.{List => JList, Collections}
 import jline.{ConsoleReader, History, CandidateListCompletionHandler, Completor}
-import Constants._
+import Config._
 
 trait MessageFactory {
     def get: Req
-    def out: {def print(str: String)}
-    def err: {def print(str: String)}
+    def out: Printer
+    def err: Printer
 }
 
 class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with Completor {
@@ -39,7 +39,7 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
                   0
                 }
                 case x => {
-                  err.print("Invalid response: " + x)
+                  err.println("Invalid response: " + x)
                   0
                 }
               }
@@ -50,8 +50,9 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
     }
 }
 
-class Decorator(actual: {def print(str: String)}, decorator: String => String) {
+class Decorator(actual: Printer, decorator: String => String) {
     def print(str: String) = actual.print(decorator(str))
+    def println(str: String) = print(str + "\n")
 }
 
 class ScriptedMessageFactory(script: String, args: Array[String]) extends MessageFactory {

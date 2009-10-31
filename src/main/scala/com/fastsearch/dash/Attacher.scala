@@ -7,7 +7,7 @@ import collection.jcl.Conversions.convertList
 import java.net.ServerSocket
 
 class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
-    val dashHome = System.getProperty(Constants.dashHomeClientProperty)
+    val dashHome = System.getProperty(Config.dashHomeClientProperty)
     val id = UUID.randomUUID
 
     def attach = {
