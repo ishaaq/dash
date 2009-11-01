@@ -1,4 +1,4 @@
-package com.fastsearch.dash
+package dash
 
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors

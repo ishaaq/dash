@@ -2,9 +2,9 @@ import sbt._
 import java.io.File
 
 class Project(info: ProjectInfo) extends DefaultProject(info) {
-    override def mainClass = Some("com.fastsearch.dash.Cli")
+    override def mainClass = Some("dash.Cli")
 
-    override def packageOptions =  ManifestAttributes(("Agent-Class", "com.fastsearch.dash.Agent")) :: super.packageOptions.toList
+    override def packageOptions =  ManifestAttributes(("Agent-Class", "dash.Agent")) :: super.packageOptions.toList
 
     val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
     val nexusReleases = "Melbourne R&D Repository" at "http://mel1u114:8081/nexus/content/groups/central"

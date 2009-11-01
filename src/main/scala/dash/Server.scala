@@ -1,4 +1,4 @@
-package com.fastsearch.dash
+package dash
 
 import java.io.{Writer, PrintWriter}
 import scala.collection.mutable.ListBuffer

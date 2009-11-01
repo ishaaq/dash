@@ -1,4 +1,4 @@
-package com.fastsearch.dash
+package dash
 
 import java.util.concurrent.ThreadFactory
 

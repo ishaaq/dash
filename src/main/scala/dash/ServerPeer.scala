@@ -1,4 +1,4 @@
-package com.fastsearch.dash
+package dash
 
 import Config._
 import java.net.InetSocketAddress

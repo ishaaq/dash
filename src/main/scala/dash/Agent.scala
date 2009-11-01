@@ -1,4 +1,4 @@
-package com.fastsearch.dash
+package dash
 
 import java.lang.instrument.Instrumentation
 import Config._

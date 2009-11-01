@@ -1,4 +1,4 @@
-package com.fastsearch.dash
+package dash
 
 import org.apache.mina.filter.reqres.{ResponseInspector, ResponseType}
 import java.util.UUID
