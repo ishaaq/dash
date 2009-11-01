@@ -6,17 +6,19 @@ import Config._
 sealed trait Message
 
 import org.apache.mina.filter.reqres.{Request => MRequest}
-class Request(req: Req) extends MRequest(req.id, req, Config.requestTimeout) {
+class Request(req: ResponseRequired) extends MRequest(req.id, req, Config.requestTimeout) {
   val id = getId.asInstanceOf[UUID]
 }
 
-sealed abstract case class Req() extends Message {
+sealed abstract case class Req() extends Message
+
+trait ResponseRequired extends Req {
   val id = UUID.randomUUID
 }
 
-case class TabCompletionRequest(prefix: String) extends Req
-case class Run(filePath: String, args: Array[String]) extends Req
-case class Eval(command: String) extends Req
+case class TabCompletionRequest(prefix: String) extends ResponseRequired
+case class Run(filePath: String, args: Array[String]) extends ResponseRequired
+case class Eval(command: String) extends ResponseRequired
 
 sealed abstract case class Command(val aliases: List[String]) extends Req {
   def this(alias: String) = this(List(alias))
@@ -26,7 +28,7 @@ sealed abstract case class Command(val aliases: List[String]) extends Req {
 case class Help(command: String) extends Command("help") {
   def this() = this(null)
 
-  private val helpList = List[Command](this, Quit)
+  private val helpList = List[Command](this, Reset, Quit)
   private val helpMap: Map[String, Command] = Map[String, Command]() ++ List.flatten(for(cmd <- helpList) yield cmd.aliases.map((_, cmd)))
 
   override def run(client: Client) = {
@@ -57,7 +59,10 @@ case class Help(command: String) extends Command("help") {
       "    " + red(":help <command>") + "\t - Display help for " + red("<command>")
 }
 
-case object Reset extends Command("reset")
+case object Reset extends Command("reset") {
+  override def run(client: Client) = client.resetSession
+  override val help = "Resets the session. All existing javascript vars and functions in the session will be cleared."
+}
 
 case object Noop extends Command("") {
   override def run(client: Client) = {}

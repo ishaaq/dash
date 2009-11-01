@@ -10,14 +10,19 @@ class Server(id: UUID, port: Int, dashHome: String) {
     val session = clientSession(dashHome, new RemoteWriter)
 
     def receive(req: Req): Unit = {
-      val reqId = req.id
+      val reqId = req match {
+        case req: ResponseRequired => Some(req.id)
+        case req => None
+      }
       req match {
             case Eval(eval) =>
-              client ! session.run(reqId, eval)
+              client ! session.run(reqId.get, eval)
             case Run(script, args) =>
-              client ! session.runScript(reqId, script, args)
+              client ! session.runScript(reqId.get, script, args)
+            case Reset =>
+              session.reset
             case TabCompletionRequest(prefix) =>
-              client ! session.tabCompletion(reqId, prefix)
+              client ! session.tabCompletion(reqId.get, prefix)
             case x => println("unexpected dash message: " + x)
       }
     }

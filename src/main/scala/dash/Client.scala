@@ -34,17 +34,16 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
         while(true) {
             messageFactory.get match {
                 case command: Command => command.run(this)
-                case req: Req => {
+                case req: ResponseRequired => {
                   server !? req match {
                     case None => err.println("ERR! did not get a response")
                     case Some(resp) => processResponse(resp)
                   }
                 }
+                case req: Req => server ! req
             }
         }
     }
 
-    private def runCommand(command: Command) {
-       command
-    }
+    def resetSession = server ! Reset
 }

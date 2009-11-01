@@ -27,11 +27,12 @@ class RequestParser extends RegexParsers {
     }
   }
 
-  private def parseCommand: Parser[Command] = ":" ~> ( quit | commandHelp | appHelp )
+  private def parseCommand: Parser[Command] = ":" ~> ( quit | commandHelp | appHelp | reset)
 
   private def quit: Parser[Command] = (caseins("exit") | caseins("quit")) ^^ { case _ => Quit }
   private def commandHelp: Parser[Command] = caseins("help") ~> "^[\\w]+".r ^^ { case command: String => new Help(command) }
   private def appHelp: Parser[Command] = caseins("help") ^^ { case _ => new Help() }
+  private def reset: Parser[Command] = caseins("reset") ^^ { case _ => Reset }
 
   /**
    * Returns a case-insensitive version of the inputted regex pattern.

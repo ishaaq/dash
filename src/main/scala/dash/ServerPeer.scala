@@ -26,11 +26,14 @@ class ServerPeer(start: => Unit, out: => Printer, err: => Printer) {
   }
   lazy val port = acceptor.getLocalAddress.getPort
 
-  def !!(req: Req) = session.write(new Request(req))
+  def !!(req: Req) = session.write(req match {
+        case req: ResponseRequired => new Request(req)
+        case _ => req
+      })
 
   def !(req: Req): Unit = !!(req)
 
-  def !?(req: Req): Option[Resp] = {
+  def !?(req: ResponseRequired): Option[Resp] = {
     val request = new Request(req)
     executor.submit(new Runnable {
         def run: Unit = session.write(request)
