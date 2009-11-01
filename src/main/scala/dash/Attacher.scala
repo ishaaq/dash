@@ -5,45 +5,75 @@ import java.util.UUID
 import com.sun.tools.attach.VirtualMachine
 import collection.jcl.Conversions.convertList
 import java.net.ServerSocket
+import java.lang.management.ManagementFactory
+import Config._
 
-class Attacher(pid: Option[Int], file: Option[File], args: Array[String]) {
+class Attacher(pid: Option[String], file: Option[File], args: Array[String]) {
     val dashHome = System.getProperty(Config.dashHomeClientProperty)
     val id = UUID.randomUUID
 
+    private def error(message: String) = System.err.println(message)
+
     def attach = {
       val client = new Client(id, file, args)
-      attachVm(pid) match {
-        case Left(status) => exit(status)
-        case Right(vm) => {
-          vm.loadAgent(dashHome + File.separator + "dash.jar", client.port.toString + "," + dashHome +"," + id)
-          vm.detach
+      try {
+          attachVm(pid) match {
+            case Left(errorMessage) => {
+              if(errorMessage != null) error(errorMessage)
+              exit(1)
+            }
+            case Right(vm) => {
+              vm.loadAgent(dashHome + File.separator + "dash.jar", client.port.toString + "," + dashHome +"," + id)
+              vm.detach
+            }
+          }
+      } catch {
+        case ex => {
+          error(ex.getClass.getSimpleName + ": " + ex.getMessage)
+          exit(1)
         }
       }
     }
 
-    private def attachVm(pid: Option[Int]): Either[Int, VirtualMachine] = {
+    private def attachVm(pid: Option[String]): Either[String, VirtualMachine] = {
+      // Gets current app's pid - sucks to have to do it this way - if only Sun would fix
+      // http://bugs.sun.com/view_bug.do?bug_id=4244896 !!
+      val myPid = ManagementFactory.getRuntimeMXBean.getName.split('@')(0)
+      // remove dash from the list of vms, no point attaching to oneself!
+      val vms = VirtualMachine.list.toList.filter(_.id != myPid)
       pid match {
-        case Some(pid) => Right(VirtualMachine.attach(pid.toString))
-        case None =>
-          val vms = VirtualMachine.list.toList
+        case Some(pid) => {
+          vms.find(_.id == pid) match {
+            case None => Left("'%s' is not a Java process id!".format(pid))
+            case Some(_) => Right(VirtualMachine.attach(pid))
+          }
+        }
+        case None => {
           vms.zipWithIndex.foreach { case (vm, idx) =>
               println("[%s] %s %s".format(idx + 1, vm.id, vm.displayName))
           }
 
           print("Choose a VM number to attach to [1" + (if (vms.length == 1) "] : " else " - %s] : ".format(vms.length)))
 
-          try {
-              readInt match {
-                case invalidId if invalidId < 1 || invalidId > vms.length =>
-                  println("Invalid vm id: %s".format(invalidId))
-                  Left(1)
-                case id => Right(VirtualMachine.attach(vms(id - 1).id))
+          readLine match {
+            case null => Left("")
+            case input => input.trim match {
+              case "" => Left(null)
+              case input => {
+                try {
+                    input.toInt match {
+                      case invalidId if invalidId < 1 || invalidId > vms.length =>
+                        Left("Invalid vm id: " + invalidId)
+                      case id => Right(VirtualMachine.attach(vms(id - 1).id))
+                    }
+                } catch {
+                  case ex: NumberFormatException =>
+                    Left("Invalid vm id: " + input)
+                }
               }
-          } catch {
-            case ex : NumberFormatException =>
-              println("Invalid vm id!")
-              Left(1)
+            }
           }
+        }
       }
     }
 }

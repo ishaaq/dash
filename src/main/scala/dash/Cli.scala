@@ -61,7 +61,7 @@ object Cli {
 
 object Args {
     var file: Option[File] = None
-    var pid: Option[Int] = None
+    var pid: Option[String] = None
     var args = Array[String]()
     var help = false
 
@@ -69,7 +69,7 @@ object Args {
     def setFile(file: File) = this.file = Some(file)
 
     @Opt{val name = "-p", val metaVar = "pid", val usage = "The process-id of the Java app to attach to" }
-    def setPid(pid: Int) = this.pid = Some(pid)
+    def setPid(pid: String) = this.pid = Some(pid)
 
     @Opt{val name = "-h", val usage = "Print this usage help"}
     def setHelp(help: Boolean) = this.help = true
