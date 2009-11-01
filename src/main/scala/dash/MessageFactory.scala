@@ -20,10 +20,23 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
     console.addCompletor(this)
     console.setCompletionHandler(new CandidateListCompletionHandler)
 
+    println(
+      red("dash (" + version + ")") + ": the Dynamically Attaching SHell\n" +
+      "==============================================\n" +
+      "For help type " + red(":help") + " at the prompt."
+    )
+
     def get = {
       console.readLine(green("dash> ")) match {
-        case null => Bye()
-        case eval => new Eval(eval)
+        case null => Quit
+        case str => {
+          new RequestParser().parseRequest(str) match {
+            case Left(ParseError(message)) =>
+                err.println(message)
+                Noop
+            case Right(req) => req
+          }
+        }
       }
     }
 
@@ -52,7 +65,7 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
 
 class Decorator(actual: Printer, decorator: String => String) {
     def print(str: String) = actual.print(decorator(str))
-    def println(str: String) = print(str + "\n")
+    def println(str: String) = actual.println(decorator(str))
 }
 
 class ScriptedMessageFactory(script: String, args: Array[String]) extends MessageFactory {
@@ -63,6 +76,6 @@ class ScriptedMessageFactory(script: String, args: Array[String]) extends Messag
       case false =>
         hasRun = true
         new Run(script, args)
-      case true => Bye()
+      case true => Quit
     }
 }

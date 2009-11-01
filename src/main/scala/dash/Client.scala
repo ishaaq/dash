@@ -12,8 +12,8 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
                             case None => new InteractiveMessageFactory(server)
                             case Some(script) => new ScriptedMessageFactory(script.getAbsolutePath, args)
                           }
-    private lazy val out: Printer = messageFactory.out
-    private lazy val err: Printer = messageFactory.err
+    lazy val out: Printer = messageFactory.out
+    lazy val err: Printer = messageFactory.err
 
     private def start: Unit = {
         def print(outs: List[Output]): Unit = outs.foreach ( _ match {
@@ -33,7 +33,7 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
 
         while(true) {
             messageFactory.get match {
-                case Bye() => exit
+                case command: Command => command.run(this)
                 case req: Req => {
                   server !? req match {
                     case None => err.println("ERR! did not get a response")
@@ -42,5 +42,9 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
                 }
             }
         }
+    }
+
+    private def runCommand(command: Command) {
+       command
     }
 }
