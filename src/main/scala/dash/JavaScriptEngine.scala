@@ -1,8 +1,10 @@
 package dash
 
 import java.util.UUID
+import Config._
 import javax.script.{ScriptEngineManager, ScriptContext}
 import scala.collection.jcl.Conversions.convertSet
+import scala.io.Source
 import _root_.sun.org.mozilla.javascript.internal.NativeArray
 
 trait JavaScriptEngine extends ScriptEngine {
@@ -11,10 +13,15 @@ trait JavaScriptEngine extends ScriptEngine {
     private val argStr = "arguments"
     private val shellArg = "__shell__"
 
+    private val globalsFilter = Set(shellArg, "context", "desc")
+
     private var wrapper = new EngineWrapper(out)
 
     private def engine = wrapper.engine
     private def bindings = wrapper.bindings
+
+
+    private val predef = Source.fromInputStream(getClass.getResourceAsStream("predef.js")).getLines.mkString("")
 
     /**
      * Creates a special 'load' function to be able to load scripts. This fn is called
@@ -26,11 +33,7 @@ trait JavaScriptEngine extends ScriptEngine {
      */
     private def createLoadFn:Unit = {
       bindings.put(shellArg, this)
-      engine.eval("""load = function() {
-         var scriptFile = arguments[0]
-         var args = arguments.length > 1 ? Array.prototype.slice.call(arguments, 1) : []
-         """ + shellArg + """.run(scriptFile, args)
-         }""")
+      engine.eval(predef)
     }
 
     protected def eval(command: String) = {
@@ -75,6 +78,23 @@ trait JavaScriptEngine extends ScriptEngine {
     def close = {
       reset
       wrapper = null
+    }
+
+    def describe(ref: String) = {
+      createLoadFn
+      val descArgs = ref match {
+        case "" => {
+            val globals = bindings.keySet.filter(key => !globalsFilter.contains(key))
+            globals.mkString("','")
+        }
+        case ref => ref
+      }
+      try {
+          eval("desc('" + descArgs + "')")
+          Right(out.getAndReset)
+      } catch {
+        case e => Left("An error occurred: " + e.getMessage)
+      }
     }
 }
 

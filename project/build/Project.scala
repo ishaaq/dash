@@ -32,7 +32,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     def assemblyOutputPath = outputPath / assemblyJarName
     def assemblyJarName = artifactID + ".jar"
     def assemblyTemporaryPath = outputPath / "assembly-libs"
-    def assemblyClasspath = super.compileClasspath
+    def assemblyClasspath = super.compileClasspath +++ mainResources
     def assemblyExtraJars = mainDependencies.scalaLibrary
     def assemblyPaths(tempDir: Path, classpath: PathFinder, extraJars: PathFinder, exclude: PathFinder => PathFinder) = {
         val (libs, directories) = classpath.get.toList.partition(ClasspathUtilities.isArchive)

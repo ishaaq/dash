@@ -3,11 +3,12 @@ package dash
 import java.io.{Writer, PrintWriter}
 import scala.collection.mutable.ListBuffer
 import java.util.UUID
-import Config.clientSession
+import Config._
 
 class Server(id: UUID, port: Int, dashHome: String) {
     val client = new ClientPeer(port, receive, close)
-    val session = clientSession(dashHome, new RemoteWriter)
+    val out = new RemoteWriter
+    val session = clientSession(dashHome, out)
 
     def receive(req: Req): Unit = {
       val reqId = req match {
@@ -23,6 +24,13 @@ class Server(id: UUID, port: Int, dashHome: String) {
               session.reset
             case TabCompletionRequest(prefix) =>
               client ! session.tabCompletion(reqId.get, prefix)
+            case Desc(jsRoot) => {
+              val output = session.describe(jsRoot) match {
+                case Left(x) => List(new StandardErr(red(x)))
+                case Right(output) => output
+              }
+              client ! new Description(reqId.get, output)
+            }
             case x => println("unexpected dash message: " + x)
       }
     }

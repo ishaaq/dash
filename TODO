@@ -1,20 +1,29 @@
 Stuff I'd like to do to enhance dash (in no particular order) along with broad complexity estimate (TRIVIAL/MEDIUM/HARD)
 
-1. Tab-completion on commands (MEDIUM)
-2. :globals command - lists all global vars/functions in session (TRIVIAL)
-3. :describe command - describes a javascript var/function/object - may also show help if implemented (MEDIUM)
-4. Tab-completion of javascript object properties (MEDIUM)
-5. Ability to dynamically inject tab-completion strategies via javascript - this will enable scripts to define custom
-   tab-completion, for e.g. to complete the input variables for a given function. (HARD)
-6. Investigate if java protection domains can be used to tighten security model to ensure that certain commands cannot
-   be run on Server, for e.g. System.exit(). However we need to be careful not to affect the security model of the
-   original code in the app. (HARD)
-7. Investigate how to get MINA to unbind the server socket after client and server connect - so that no other app can
-   then communicate with dash. (MEDIUM)
-8. Write script(s) with "best-practice" examples - i.e. explain the JavaScript module pattern 
-   http://www.wait-till-i.com/2007/07/24/show-love-to-the-module-pattern/ (MEDIUM)
-9. build process for distribution tarball (MEDIUM)
-10. Use something like jarjar to rename dash's deps so we don't have classloader clashes when the app being attached
-    to already has differing versions of the deps (MEDIUM)
-11. Deal with stacktraces a bit better when errors are thrown by javascript code - currently the traces are useless as
-    they all originate from Rhino code and do not display the actual error stack.
+- Tab-completion on commands (MEDIUM)
+
+- Tab-completion of javascript object properties (MEDIUM)
+
+- Ability to dynamically inject tab-completion strategies via javascript - this will enable scripts to define custom
+  tab-completion, for e.g. to complete the input variables for a given function. (HARD)
+
+- Investigate if java protection domains can be used to tighten security model to ensure that certain commands cannot
+  be run on Server, for e.g. System.exit(). However we need to be careful not to affect the security model of the
+  original code in the app. (HARD)
+
+- Investigate how to get MINA to unbind the server socket after client and server connect - so that no other app can
+  then communicate with dash. (MEDIUM)
+
+- Write script(s) with "best-practice" examples - i.e. explain the JavaScript module pattern
+  http://www.wait-till-i.com/2007/07/24/show-love-to-the-module-pattern/ (MEDIUM)
+
+- build process for distribution tarball (MEDIUM)
+
+- Use something like jarjar to rename dash's deps so we don't have classloader clashes when the app being attached
+  to already has differing versions of the deps (MEDIUM)
+
+- Deal with stacktraces a bit better when errors are thrown by javascript code - currently the traces are useless as
+  they all originate from Rhino code and do not display the actual error stack. (MEDIUM)
+
+- pre-parse javascript at client-side (in interactive mode) so that we can detect incomplete eval statements and know
+  to let user continue on next line, i.e., multi-line eval scripts. (HARD)

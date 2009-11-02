@@ -5,8 +5,9 @@ import java.util.UUID
 import Config._
 
 class Client(id: UUID, file: Option[File], args: Array[String]) {
-    lazy val server = new ServerPeer(start, out, err)
-    lazy val port = server.port
+    private lazy val s = new ServerPeer(start, out, err)
+    def server = s
+    def port = server.port
 
     private lazy val messageFactory = file match {
                             case None => new InteractiveMessageFactory(server)
@@ -15,12 +16,12 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
     lazy val out: Printer = messageFactory.out
     lazy val err: Printer = messageFactory.err
 
-    private def start: Unit = {
-        def print(outs: List[Output]): Unit = outs.foreach ( _ match {
-          case StandardOut(str) => out.print(str)
-          case StandardErr(str) => err.print(str)
-        })
+    def print(outs: List[Output]): Unit = outs.foreach ( _ match {
+      case StandardOut(str) => out.print(str)
+      case StandardErr(str) => err.print(str)
+    })
 
+    private def start: Unit = {
         val processResponse: PartialFunction[Resp, Unit] = {
           case Success(_, outs, response) =>
             print(outs)
@@ -44,6 +45,4 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
             }
         }
     }
-
-    def resetSession = server ! Reset
 }
