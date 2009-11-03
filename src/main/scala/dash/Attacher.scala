@@ -49,29 +49,33 @@ class Attacher(pid: Option[String], file: Option[File], args: Array[String]) {
           }
         }
         case None => {
-          vms.zipWithIndex.foreach { case (vm, idx) =>
-              println("[%s] %s %s".format(idx + 1, vm.id, vm.displayName))
-          }
+          if(vms.size == 0) {
+              Left("No running JVMs to attach to!")
+          } else {
+              vms.zipWithIndex.foreach { case (vm, idx) =>
+                  println("[%s] %s %s".format(idx + 1, vm.id, vm.displayName))
+              }
 
-          print("Choose a VM number to attach to [1" + (if (vms.length == 1) "] : " else " - %s] : ".format(vms.length)))
+              print("Choose a JVM number to attach to [1" + (if (vms.length == 1) "] : " else " - %s] : ".format(vms.length)))
 
-          readLine match {
-            case null => Left("")
-            case input => input.trim match {
-              case "" => Left(null)
-              case input => {
-                try {
-                    input.toInt match {
-                      case invalidId if invalidId < 1 || invalidId > vms.length =>
-                        Left("Invalid vm id: " + invalidId)
-                      case id => Right(VirtualMachine.attach(vms(id - 1).id))
+              readLine match {
+                case null => Left("")
+                case input => input.trim match {
+                  case "" => Left(null)
+                  case input => {
+                    try {
+                        input.toInt match {
+                          case invalidId if invalidId < 1 || invalidId > vms.length =>
+                            Left("Invalid JVM id: " + invalidId)
+                          case id => Right(VirtualMachine.attach(vms(id - 1).id))
+                        }
+                    } catch {
+                      case ex: NumberFormatException =>
+                        Left("Invalid JVM id: " + input)
                     }
-                } catch {
-                  case ex: NumberFormatException =>
-                    Left("Invalid vm id: " + input)
+                  }
                 }
               }
-            }
           }
         }
       }
