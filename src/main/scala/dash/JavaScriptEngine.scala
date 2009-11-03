@@ -1,6 +1,8 @@
 package dash
 
+import ARM._
 import java.util.UUID
+import java.io.FileReader
 import Config._
 import javax.script.{ScriptEngineManager, ScriptContext}
 import scala.collection.jcl.Conversions.convertSet
@@ -11,9 +13,10 @@ trait JavaScriptEngine extends ScriptEngine {
     this: ClientSession =>
 
     private val argStr = "arguments"
-    private val shellArg = "__shell__"
+    private val __shell__ = "__shell__"
+    private val __desc__ = "__desc__"
 
-    private val globalsFilter = Set(shellArg, "context", "desc")
+    private val globalsFilter = Set(__shell__, __desc__, "context")
 
     private var wrapper = new EngineWrapper(out)
 
@@ -23,6 +26,18 @@ trait JavaScriptEngine extends ScriptEngine {
 
     private val predef = Source.fromInputStream(getClass.getResourceAsStream("predef.js")).getLines.mkString("")
 
+    private def evalString(string: String) = engine.eval(string)
+    private def evalScript(script: String) = {
+          withCloseable(new FileReader(resolveScriptFile(script))) {
+            reader => engine.eval(reader)
+          }
+    }
+
+    private def runEval(evaluator: => AnyRef, doLoadPredef: Boolean) = {
+        if(doLoadPredef) doLoadPredef
+        evaluator
+    }
+
     /**
      * Creates a special 'load' function to be able to load scripts. This fn is called
      * once before every eval() call. This is so that if another script
@@ -31,22 +46,18 @@ trait JavaScriptEngine extends ScriptEngine {
      * but, on the face of it, it looks like Sun has done the same thing for
      * the 'print' and 'println' functions, i.e. you cannot redefine them.
      */
-    private def createLoadFn:Unit = {
-      bindings.put(shellArg, this)
-      engine.eval(predef)
+    private def doLoadPredef: Unit = {
+      bindings.put(__shell__, this)
+      runEval(evalString(predef), false)
     }
 
-    protected def eval(command: String) = {
-        createLoadFn
-        wrapper.engine.eval(command)
-    }
+    protected def eval(command: String) = runEval(evalString(command), true)
 
     protected def eval(script: String, args: Array[String]) = {
-      createLoadFn
       val oldArgs = if(bindings.containsKey(argStr)) Some(bindings.get(argStr)) else None
       try {
           engine.put(argStr, args)
-          engine.eval(resolveScriptReader(script))
+          runEval(evalScript(script), true)
       } finally {
           if(!oldArgs.isEmpty) bindings.put(argStr, oldArgs.get)
       }
@@ -55,7 +66,7 @@ trait JavaScriptEngine extends ScriptEngine {
     def run(script: String, args: NativeArray): AnyRef = eval(script, convertArgs(args))
 
     def tabCompletion(id: UUID, prefix: String) = {
-      createLoadFn
+      doLoadPredef
       val trimmed = prefix.trim
       new TabCompletionList(id, bindings.keySet.filter(_.startsWith(trimmed)).toList)
     }
@@ -81,7 +92,7 @@ trait JavaScriptEngine extends ScriptEngine {
     }
 
     def describe(ref: String) = {
-      createLoadFn
+      doLoadPredef
       val descArgs = ref match {
         case "" => {
             val globals = bindings.keySet.filter(key => !globalsFilter.contains(key))
@@ -90,7 +101,7 @@ trait JavaScriptEngine extends ScriptEngine {
         case ref => ref
       }
       try {
-          eval("desc('" + descArgs + "')")
+          runEval(evalString(__desc__ + "('" + descArgs + "')"), false)
           Right(out.getAndReset)
       } catch {
         case e => Left("An error occurred: " + e.getMessage)

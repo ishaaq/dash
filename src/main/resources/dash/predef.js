@@ -32,7 +32,7 @@ typeOf.help = "Usage: typeOf(value)\n" +
 "than the in-built javascript 'typeof' operator. In particular it differentiates between\n" +
 "object types."
 
-desc = function() {
+__desc__ = function() {
     var describe = function(name, verbose) {
         try {
             var obj = eval(name)
