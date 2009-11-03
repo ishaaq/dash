@@ -20,7 +20,6 @@ function typeOf(v) {
         if(v === null) return "null"
         if(v.constructor == (new Array).constructor) return "array"
         if(v.constructor == (new Date).constructor) return "date"
-        if(v.constructor == (new RegExp).consructor) return "regex"
         if(v instanceof java.lang.Object) return v.getClass().name
         return "object"
     } else {
