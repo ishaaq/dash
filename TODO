@@ -17,8 +17,6 @@ Stuff I'd like to do to enhance dash (in no particular order) along with broad c
 - Write script(s) with "best-practice" examples - i.e. explain the JavaScript module pattern
   http://www.wait-till-i.com/2007/07/24/show-love-to-the-module-pattern/ (MEDIUM)
 
-- build process for distribution tarball (MEDIUM)
-
 - Use something like jarjar to rename dash's deps so we don't have classloader clashes when the app being attached
   to already has differing versions of the deps (MEDIUM)
 
