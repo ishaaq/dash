@@ -1,7 +1,18 @@
 package dash
 
+import java.io.Closeable
+
 object ARM {
-  type Closeable = {def close(): Unit}
+  /**
+   * Structural Type closeable
+   */
+  type STypeCloseable = {def close(): Unit}
+
+  implicit def sTypeCloseableToCloseable(stCloseable: STypeCloseable) = {
+    new Closeable {
+      def close = stCloseable.close
+    }
+  }
 
   def withCloseable[C<:Closeable, R](getCloseable: => C)(block: C => R): R = {
       val closeable = getCloseable
