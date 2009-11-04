@@ -5,7 +5,8 @@ import jline.ANSIBuffer.ANSICodes.attrib
 import java.net.InetAddress.getByName
 
 object Config {
-  def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with JavaScriptEngine
+  //def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with JavaScriptEngine
+  def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with RhinoEngine
 
   val logging = false
   val dashHomeClientProperty = "dash.home"

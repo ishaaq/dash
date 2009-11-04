@@ -66,4 +66,6 @@ class RemoteWriter extends Writer {
       buffer.clear
       list
     }
+
+    val help = "A custom implementation of java.io.Writer that outputs remotely to the dash client's console."
 }

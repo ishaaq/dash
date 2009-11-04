@@ -1,6 +1,10 @@
-// Some predefined global functions we need. These will be reinstated before every
-// evaluation - so client sessions that explicitly redefine them will be doing so
-// in vain.
+// Some predefined global functions we need.
+
+// a temporary array containing all the functions we want the
+// end user to be able to enumerate. After loading them the
+// array will be removed from scope
+enumerate = [ "load", "out", "print", "println", "typeOf" ]
+
 load = function() {
      var scriptFile = arguments[0]
     var args = arguments.length > 1 ? Array.prototype.slice.call(arguments, 1) : []
@@ -15,7 +19,6 @@ load.help = "Usage: load(scriptPath [,arg1] [,arg2]...)\n" +
 
 // adapted from http://joncom.be/code/realtypeof/
 function typeOf(v) {
-    var func = "function"
     if(typeof(v) == "object") {
         if(v === null) return "null"
         if(v.constructor == (new Array).constructor) return "array"
@@ -40,6 +43,11 @@ __desc__ = function() {
             if(verbose) {
                 if(typeof obj.help == "string") {
                     println(obj.help)
+                } else if(typeof obj.help == "function") {
+                    var help = obj.help()
+                    if(typeOf(help) == "java.lang.String" || typeOf(help) == "string") {
+                        println(help)
+                    }
                 }
                 if(typeOf(obj) == "object") {
                     for(i in obj) {
@@ -65,3 +73,28 @@ __desc__ = function() {
         }
     }
 }
+
+function print(str, newline) {
+    if (typeof (str) == "undefined") {
+        str = "undefined";
+    } else {
+        if (str == null) {
+            str = "null";
+        }
+    }
+    out.print(String(str));
+    if (newline) {
+        out.print("\n");
+    }
+    out.flush();
+}
+print.help = "Usage: print(string, boolean)\n" +
+"Prints the string and a newline char if the boolean is true. The printing is done on\n" +
+"the client side using dash's RemoteWriter implementation.\n"
+
+function println(str) {
+    print(str, true);
+}
+println.help = "Usage: println(string)\n" +
+"Prints the string and a newline char. The printing is done on\n" +
+"the client side using dash's RemoteWriter implementation.\n"

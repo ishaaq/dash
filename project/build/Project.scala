@@ -24,4 +24,5 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val mina = "org.apache.mina" % "mina-core" % "2.0.0-RC1" intransitive
     val slf4j = "org.slf4j" % "slf4j-api" % "1.5.8" intransitive
     val slf4j_jdk14 = "org.slf4j" % "slf4j-jdk14" % "1.5.8" intransitive
+    val rhino = "rhino" % "js" % "1.7R2" intransitive
 }
