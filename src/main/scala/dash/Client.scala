@@ -9,10 +9,7 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
     def server = s
     def port = server.port
 
-    private lazy val messageFactory = file match {
-                            case None => new InteractiveMessageFactory(server)
-                            case Some(script) => new ScriptedMessageFactory(script.getAbsolutePath, args)
-                          }
+    private lazy val messageFactory: MessageFactory = Config.messageFactory(file, args, server)
     lazy val out: Printer = messageFactory.out
     lazy val err: Printer = messageFactory.err
 

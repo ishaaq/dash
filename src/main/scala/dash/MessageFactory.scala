@@ -11,7 +11,16 @@ trait MessageFactory {
     def err: Printer
 }
 
-class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with Completor {
+trait ScriptCompletionAware {
+    /**
+     * Returns true if the script is deemed to be complete and ready for processing.
+     * False if we expect the user to input more in.
+     * The default impl always returns true.
+     */
+    protected def checkScriptComplete(script: String) = true
+}
+
+class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with Completor with ScriptCompletionAware {
     private val console = new ConsoleReader
     val out = System.out
     val err = new Decorator(System.err, red)
@@ -34,7 +43,24 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
             case Left(ParseError(message)) =>
                 err.println(message)
                 Noop
-            case Right(req) => req
+            case Right(req) => {
+                req match {
+                  case Eval(str) => getCompletedScript(str)
+                  case _ => req
+                }
+            }
+          }
+        }
+      }
+    }
+
+    private def getCompletedScript(script: String): Eval = {
+      checkScriptComplete(script) match {
+        case true =>  Eval(script.toString)
+        case false => {
+          console.readLine(green("> ")) match {
+            case null => Eval(script.toString)
+            case nextLine => getCompletedScript(script + "\n" + nextLine)
           }
         }
       }
@@ -68,7 +94,7 @@ class Decorator(actual: Printer, decorator: String => String) {
     def println(str: String) = actual.println(decorator(str))
 }
 
-class ScriptedMessageFactory(script: String, args: Array[String]) extends MessageFactory {
+class ScriptMessageFactory(script: String, args: Array[String]) extends MessageFactory {
     private var hasRun = false
     val out = System.out
     val err = System.err

@@ -67,75 +67,40 @@ trait RhinoEngine extends ScriptEngine {
     }
 
     import org.mozilla.javascript.ScriptableObject.{DONTENUM, PERMANENT, READONLY}
-    import org.mozilla.javascript.{ScriptableObject, Context, Undefined, ImporterTopLevel}
+    import org.mozilla.javascript.{Context, NativeFunction}
     import java.io.{Reader, InputStreamReader}
-    class Engine(out: RemoteWriter) {
-        val importer = new ImporterTopLevel()
-        private val scope = withContext { cx => new ImporterTopLevel(cx) }
-        loadPredefs
-
-        private def loadPredefs = withContext {cx =>
-          val hiddenConst = READONLY | PERMANENT | DONTENUM
-          val const = READONLY | PERMANENT
-          scope.defineProperty("out", Context.javaToJS(out, scope), const)
-          scope.defineProperty("__shell__", Context.javaToJS(RhinoEngine.this, scope), hiddenConst)
-          val predefJs = "predef.js"
-          withCloseable(new InputStreamReader(getClass.getResourceAsStream(predefJs))) { reader =>
-             cx.evaluateReader(scope, reader, predefJs, 1, null)
-          }
-          val enumerateProp = "enumerate"
-          val enumerate = getProperty(enumerateProp)
-          val enumerateableProps = enumerate.asInstanceOf[NativeArray].toList
-          deleteProperty(enumerateProp)
-          getPropertyIds.foreach{ prop =>scope.setAttributes(prop, if(enumerateableProps.contains(prop)) const else hiddenConst)}
-          scope
-        }
-
-        def withContext[R](block: Context => R): R = {
-          val cx = Context.enter
-          try {
-              block(cx)
-          } finally {
-            Context.exit
-          }
+    class Engine(out: RemoteWriter) extends RhinoScopeWrapper {
+        withContext { cx =>
+            val hiddenConst = READONLY | PERMANENT | DONTENUM
+            val const = READONLY | PERMANENT
+            scope.defineProperty("out", Context.javaToJS(out, scope), const)
+            scope.defineProperty("__shell__", Context.javaToJS(RhinoEngine.this, scope), hiddenConst)
+            val predefJs = "predef.js"
+            withCloseable(new InputStreamReader(getClass.getResourceAsStream(predefJs))) { reader =>
+                cx.evaluateReader(scope, reader, predefJs, 1, null)
+            }
+            val enumerateProp = "enumerate"
+            val enumerate = getProperty(enumerateProp)
+            val enumerateableProps = enumerate.asInstanceOf[NativeArray].toList
+            deleteProperty(enumerateProp)
+            getPropertyIds.foreach{ prop =>scope.setAttributes(prop, if(enumerateableProps.contains(prop)) const else hiddenConst)}
+            scope
         }
 
         def run(string: String): AnyRef = withContext  { cx =>
-            getResult(cx.evaluateString(scope, string, "interactive_shell", 1, null))
+            getResult(cx.evaluateString(scope, string, "<stdin>", 1, null))
         }
 
         def run(reader: Reader, fileName: String): AnyRef = withContext { cx =>
-            getResult(withCloseable(reader) { reader =>
-                cx.evaluateReader(scope, reader, fileName, 1, null)
+            getResult( withCloseable(reader) { reader =>
+                    cx.evaluateReader(scope, reader, fileName, 1, null)
                 }
             )
         }
 
-        private def getResult(runner: => AnyRef): AnyRef = {
-          runner match {
-            case u: Undefined => "undefined"
-            case x => x
-          }
+        private def getResult(runner: => AnyRef): AnyRef = runner match {
+            case f: NativeFunction => "function"
+            case x => Context.toString(x)
         }
-
-        def getPropertyIds(obj: ScriptableObject): List[String] = {
-          val propIds = (for(propId <- ScriptableObject.getPropertyIds(obj)
-              if(propId.isInstanceOf[String])
-          ) yield propId.toString).toList
-          propIds.sort((x, y) => x.toLowerCase < y.toLowerCase)
-        }
-        def getPropertyIds: List[String] = getPropertyIds(scope)
-
-        def setProperty(obj: ScriptableObject)(prop: String, value: AnyRef): Unit = ScriptableObject.putProperty(obj, prop, value)
-        def setProperty: (String, AnyRef) => Unit = setProperty(scope)_
-
-        def hasProperty(obj: ScriptableObject)(prop: String) = ScriptableObject.hasProperty(obj, prop)
-        def hasProperty: String => Boolean = hasProperty(scope)_
-
-        def getProperty(obj: ScriptableObject)(prop: String) = ScriptableObject.getProperty(obj, prop)
-        def getProperty: String => AnyRef = getProperty(scope)_
-
-        def deleteProperty(obj: ScriptableObject)(prop: String) = ScriptableObject.deleteProperty(obj, prop)
-        def deleteProperty: String => Boolean = deleteProperty(scope)_
     }
 }

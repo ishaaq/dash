@@ -8,6 +8,13 @@ object Config {
   //def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with JavaScriptEngine
   def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with RhinoEngine
 
+  def messageFactory(option: Option[File], args: Array[String], server: ServerPeer): MessageFactory = {
+    option match {
+      case None => new InteractiveMessageFactory(server) with RhinoScriptCompletionAware
+      case Some(script) => new ScriptMessageFactory(script.getAbsolutePath, args)
+    }
+  }
+
   val logging = false
   val dashHomeClientProperty = "dash.home"
   val requestTimeout = 2000L
