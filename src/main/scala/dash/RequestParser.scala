@@ -1,7 +1,6 @@
 package dash
 
 import scala.util.parsing.combinator.RegexParsers
-import scala.util.parsing.input.Position
 
 class RequestParser extends RegexParsers {
 
@@ -38,7 +37,7 @@ class RequestParser extends RegexParsers {
   private def reset: Parser[Command] = caseins("reset") ^^ { case _ => Reset }
 
   private def desc: Parser[Command] = caseins("desc") ~> opt(name) ^^ {
-        case Some(root) => new Desc(root)
+        case Some(name) => new Desc(name)
         case None => new Desc()
   }
 
