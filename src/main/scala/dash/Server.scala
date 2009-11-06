@@ -6,9 +6,9 @@ import java.util.UUID
 import Config._
 
 class Server(id: UUID, port: Int, dashHome: String) {
-    val client = new ClientPeer(port, receive, close)
     val out = new RemoteWriter
     val session = clientSession(dashHome, out)
+    val client = new ClientPeer(port, receive, close)
 
     def receive(req: Req): Unit = {
       val reqId = req match {
