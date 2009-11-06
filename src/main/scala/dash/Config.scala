@@ -8,14 +8,10 @@ object Config {
   //def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with JavaScriptEngine
   def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with RhinoEngine
 
-  private var useANSIColours = true
-
-  implicit def ansi2String(formatted: FormattedString): String = formatted.getString(useANSIColours)
-
   def messageFactory(option: Option[File], args: Array[String], server: ServerPeer): MessageFactory = {
     option match {
       case None => new InteractiveMessageFactory(server) with RhinoScriptCompletionAware
-      case Some(script) => { useANSIColours = false; new ScriptMessageFactory(script.getAbsolutePath, args) }
+      case Some(script) => new ScriptMessageFactory(script.getAbsolutePath, args)
     }
   }
 
@@ -30,6 +26,7 @@ object Config {
 
   def red(str: String) = Red.code + str + End.code
   def green(str: String) = Green.code + str + End.code
+  def bold(str: String) = Bold.code + str + End.code
 
   type Printer = {
     def print(str: String)

@@ -1,4 +1,0 @@
-package dash
-
-trait ScriptCompletionChecker {
-}

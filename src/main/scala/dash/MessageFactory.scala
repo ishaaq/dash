@@ -6,9 +6,14 @@ import jline.{ConsoleReader, History, CandidateListCompletionHandler, Completor}
 import Config._
 
 trait MessageFactory {
+    implicit def formattedString2String(fString: FormattedString): String = format(fString)
+    implicit def rawString2FormattedStrig(raw: String) = new FormattedString(raw)
+
     def get: Req
-    def out: Printer
-    def err: Printer
+    val out = new Decorator(System.out, format)
+    protected def formatStrings = true
+    private def format(fString: FormattedString) = fString.getString(formatStrings)
+    private def format(string: String) = string.getString(formatStrings)
 }
 
 trait ScriptCompletionAware {
@@ -22,26 +27,24 @@ trait ScriptCompletionAware {
 
 class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with Completor with ScriptCompletionAware {
     private val console = new ConsoleReader
-    val out = System.out
-    val err = new Decorator(System.err, red)
 
     console.setHistory(new History(new File(System.getProperty("user.home"), ".dash_history")))
     console.addCompletor(this)
     console.setCompletionHandler(new CandidateListCompletionHandler)
 
-    println(
-      red("dash (" + version + ")") + ": the Dynamically Attaching SHell\n" +
-      "==============================================\n" +
-      "For help type " + red(":help") + " at the prompt."
-    )
+    out.println(
+      green("dash (" + version + ")") +
+""": the {{bold:D:}}ynamically {{bold:A:}}ttaching {{bold:SH:}}ell
+==============================================
+For help type {{bold::help:}} at the prompt.""")
 
     def get = {
-      console.readLine(green("dash> ")) match {
+      console.readLine(new FormattedString(green("dash> "))) match {
         case null => Quit
         case str => {
           new RequestParser().parseRequest(str) match {
             case Left(ParseError(message)) =>
-                err.println(message)
+                out.println(message)
                 Noop
             case Right(req) => {
                 req match {
@@ -58,7 +61,7 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
       checkScriptComplete(script) match {
         case true =>  Eval(script.toString)
         case false => {
-          console.readLine(green("> ")) match {
+          console.readLine(new FormattedString(green("> "))) match {
             case null => Eval(script.toString)
             case nextLine => getCompletedScript(script + "\n" + nextLine)
           }
@@ -78,7 +81,7 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
                   0
                 }
                 case x => {
-                  err.println("Invalid response: " + x)
+                  out.println(red("Invalid response: ") + x)
                   0
                 }
               }
@@ -96,8 +99,6 @@ class Decorator(actual: Printer, decorator: String => String) {
 
 class ScriptMessageFactory(script: String, args: Array[String]) extends MessageFactory {
     private var hasRun = false
-    val out = System.out
-    val err = System.err
     def get = hasRun match {
       case false =>
         hasRun = true

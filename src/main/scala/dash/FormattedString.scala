@@ -24,5 +24,5 @@ case class Str(string: String) extends FormattedStringPart
 sealed abstract class ANSIControl(val code: String, val ansi: String) extends FormattedStringPart
 case object Red extends ANSIControl("{{red:", attrib(31))
 case object Green extends ANSIControl("{{green:", attrib(32))
-case object Bold extends ANSIControl("{{bold:", attrib(1))
+case object Bold extends ANSIControl("{{bold:", attrib(1) + attrib(30))
 case object End extends ANSIControl(":}}", attrib(0))
