@@ -22,7 +22,7 @@ case class Eval(command: String) extends ResponseRequired
 
 sealed abstract case class Command(val aliases: List[String]) extends Req {
   def this(alias: String) = this(List(alias))
-  def run(client: Client): Unit = client.err.println("Not implemented yet!")
+  def run(client: Client): Unit = client.out.println(red("Not implemented yet!"))
   def help: String = red("Not implemented yet!")
 }
 case class Help(command: String) extends Command("help") {
@@ -48,7 +48,7 @@ case class Help(command: String) extends Command("help") {
         case command => {
             helpMap.get(command) match {
               case Some(command) => println(command.help)
-              case None => client.err.println("No such command: " + command)
+              case None => client.out.println(red("No such command: ") + command)
             }
         }
      }
@@ -69,7 +69,7 @@ case class Desc(jsRoot: String) extends Command("desc") with ResponseRequired {
   override def run(client: Client) = {
     client.server !? this match {
       case Some(Description(_, out)) => client.print(out)
-      case x => client.err.println("Unexpected response: " + x)
+      case x => client.out.println(red("Unexpected response: ") + x)
     }
   }
   override val help ="""Describes the contents of a javascript variable reference in session.
@@ -91,12 +91,6 @@ case object Quit extends Command(List("exit", "quit")) {
 @serializable
 sealed abstract case class Resp(val reqId: UUID) extends Message
 case class TabCompletionList(id: UUID, list: List[String]) extends Resp(id)
-case class Success(id: UUID, out: List[Output], response: String) extends Resp(id)
-case class Error(id: UUID, out: List[Output], response: String) extends Resp(id)
-case class Description(id: UUID, out: List[Output]) extends Resp(id)
-
-@serializable
-sealed abstract class Output(val string: String)
-
-case class StandardOut(str: String) extends Output(str)
-case class StandardErr(str: String) extends Output(str)
+case class Success(id: UUID, out: List[String], response: String) extends Resp(id)
+case class Error(id: UUID, out: List[String], response: String) extends Resp(id)
+case class Description(id: UUID, out: List[String]) extends Resp(id)

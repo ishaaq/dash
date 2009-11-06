@@ -26,7 +26,7 @@ class Server(id: UUID, port: Int, dashHome: String) {
               client ! session.tabCompletion(reqId.get, prefix)
             case Desc(jsRoot) => {
               val output = session.describe(jsRoot) match {
-                case Left(x) => List(new StandardErr(red(x)))
+                case Left(x) => List(red(x))
                 case Right(output) => output
               }
               client ! new Description(reqId.get, output)
@@ -43,13 +43,13 @@ class Server(id: UUID, port: Int, dashHome: String) {
 
 class RemoteWriter extends Writer {
     private val sb = new StringBuilder
-    private val buffer = new ListBuffer[Output]
+    private val buffer = new ListBuffer[String]
 
     val printWriter = new PrintWriter(this, true)
     def close = flush
     def flush = {
       if(sb.length > 0) {
-          append(sb.toString)
+          buffer += sb.toString
           sb.clear
        }
     }
@@ -58,8 +58,6 @@ class RemoteWriter extends Writer {
 
     def print(str: String) = append(str)
     def println(str: String) = append(str + "\n")
-
-    private def append(str: String) = buffer += new StandardOut(str)
 
     def getAndReset = {
       val list = buffer.toList

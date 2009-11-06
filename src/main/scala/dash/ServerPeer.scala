@@ -9,7 +9,7 @@ import org.apache.mina.core.session.IoSession
 import org.apache.mina.filter.reqres.RequestResponseFilter
 import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
-class ServerPeer(start: => Unit, out: => Printer, err: => Printer) {
+class ServerPeer(start: => Unit, out: => Printer) {
   private var session: IoSession = _
   private val executor = new ScheduledThreadPoolExecutor(5)
   lazy val acceptor = {
@@ -41,7 +41,7 @@ class ServerPeer(start: => Unit, out: => Printer, err: => Printer) {
     val resp = request.awaitResponse
     resp.getMessage match {
       case resp: Resp => Some(resp)
-      case x => { err.println("unexpected response: " + x); None }
+      case x => { out.println(red("unexpected response: ") + x); None }
     }
   }
 
@@ -56,7 +56,7 @@ class ServerPeer(start: => Unit, out: => Printer, err: => Printer) {
           executor.scheduleWithFixedDelay(new Runnable{
                               def run = {
                                 if(!session.isConnected) {
-                                    err.println("Lost connection! Shutting down...")
+                                    out.println(red("Lost connection! Shutting down..."))
                                     exit(1)
                                 }
                               }

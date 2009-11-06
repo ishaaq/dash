@@ -5,18 +5,14 @@ import java.util.UUID
 import Config._
 
 class Client(id: UUID, file: Option[File], args: Array[String]) {
-    private lazy val s = new ServerPeer(start, out, err)
+    private lazy val s = new ServerPeer(start, out)
     def server = s
     def port = server.port
 
     private lazy val messageFactory: MessageFactory = Config.messageFactory(file, args, server)
     lazy val out: Printer = messageFactory.out
-    lazy val err: Printer = messageFactory.err
 
-    def print(outs: List[Output]): Unit = outs.foreach ( _ match {
-      case StandardOut(str) => out.print(str)
-      case StandardErr(str) => err.print(str)
-    })
+    def print(outs: List[String]): Unit = outs.foreach(out.print(_))
 
     private def start: Unit = {
         val processResponse: PartialFunction[Resp, Unit] = {
@@ -25,8 +21,8 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
             out.println(">> " + response)
           case Error(_, outs, response) =>
             print(outs)
-            err.println("ERR! " + response)
-          case x => err.println("unexpected response: " + x)
+            out.println(red("ERR! ") + response)
+          case x => out.println(red("unexpected response: ") + x)
         }
 
         while(true) {
@@ -34,7 +30,7 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
                 case command: Command => command.run(this)
                 case req: ResponseRequired => {
                   server !? req match {
-                    case None => err.println("ERR! did not get a response")
+                    case None => out.println(red("ERR!") + " did not get a response")
                     case Some(resp) => processResponse(resp)
                   }
                 }
