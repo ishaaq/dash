@@ -92,5 +92,5 @@ case object Quit extends Command(List("exit", "quit")) {
 sealed abstract case class Resp(val reqId: UUID) extends Message
 case class TabCompletionList(id: UUID, list: List[String]) extends Resp(id)
 case class Success(id: UUID, out: List[String], response: String) extends Resp(id)
-case class Error(id: UUID, out: List[String], response: String) extends Resp(id)
+case class Error(id: UUID, errorClass: String, message: String, stack: String) extends Resp(id)
 case class Description(id: UUID, out: List[String]) extends Resp(id)

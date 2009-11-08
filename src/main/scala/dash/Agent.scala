@@ -10,7 +10,8 @@ object Agent {
       val port = arguments(0).toInt
       val dashHome = arguments(1)
       val id = UUID.fromString(arguments(2))
-      new Server(id, port, arguments(1))
+      val stdinName = arguments(3)
+      new Server(id, port, dashHome, stdinName)
       println("connected to dash client: " + id)
   }
 }

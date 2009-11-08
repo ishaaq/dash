@@ -12,7 +12,7 @@ trait RhinoEngine extends ScriptEngine {
     private val argStr = "arguments"
     private val __desc__ = "__desc__"
 
-    private var engine = new Engine(out)
+    private var engine = new Engine(out, stdinName)
 
     def tabCompletion(id: UUID, prefix: String) = {
       val trimmed = prefix.trim
@@ -20,7 +20,7 @@ trait RhinoEngine extends ScriptEngine {
       new TabCompletionList(id, engine.getPropertyIds.filter(_.startsWith(trimmed)).toList)
     }
 
-    def reset = engine = new Engine(out)
+    def reset = engine = new Engine(out, stdinName)
 
     def close = engine = null
 
@@ -67,9 +67,11 @@ trait RhinoEngine extends ScriptEngine {
     }
 
     import org.mozilla.javascript.ScriptableObject.{DONTENUM, PERMANENT, READONLY}
-    import org.mozilla.javascript.{Context, NativeFunction}
+    import org.mozilla.javascript.{Context, NativeFunction, NativeJavaObject}
     import java.io.{Reader, InputStreamReader}
-    class Engine(out: RemoteWriter) extends RhinoScopeWrapper {
+    import org.mozilla.javascript.EcmaError
+    import org.mozilla.javascript.JavaScriptException
+    class Engine(out: RemoteWriter, stdinName: String) extends RhinoScopeWrapper {
         withContext { cx =>
             val hiddenConst = READONLY | PERMANENT | DONTENUM
             val const = READONLY | PERMANENT
@@ -87,15 +89,37 @@ trait RhinoEngine extends ScriptEngine {
             scope
         }
 
+        /**
+         * Possibly unwrap the real java exception that caused the error..
+         */
+        private def processRhinoErrors[R](block: => R): R = {
+          try {
+            block
+          } catch {
+            case je: JavaScriptException => {
+              je.getValue match {
+                case v: NativeJavaObject => {
+                  v.unwrap match {
+                    case t: Throwable => {
+                      throw new ScriptException(je.getMessage, t)
+                    }
+                  }
+                }
+              }
+              throw je
+            }
+          }
+        }
+
         def run(string: String): AnyRef = withContext  { cx =>
-            getResult(cx.evaluateString(scope, string, "<stdin>", 1, null))
+            processRhinoErrors(getResult(cx.evaluateString(scope, string, stdinName, 1, null)))
         }
 
         def run(reader: Reader, fileName: String): AnyRef = withContext { cx =>
-            getResult( withCloseable(reader) { reader =>
+            processRhinoErrors(getResult( withCloseable(reader) { reader =>
                     cx.evaluateReader(scope, reader, fileName, 1, null)
                 }
-            )
+            ))
         }
 
         private def getResult(runner: => AnyRef): AnyRef = runner match {

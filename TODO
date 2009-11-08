@@ -19,6 +19,3 @@ Stuff I'd like to do to enhance dash (in no particular order) along with broad c
 
 - Use something like jarjar to rename dash's deps so we don't have classloader clashes when the app being attached
   to already has differing versions of the deps (MEDIUM)
-
-- Deal with stacktraces a bit better when errors are thrown by javascript code - currently the traces are useless as
-  they all originate from Rhino code and do not display the actual error stack. (MEDIUM)

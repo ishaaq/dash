@@ -6,7 +6,7 @@ import java.net.InetAddress.getByName
 
 object Config {
   //def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with JavaScriptEngine
-  def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with RhinoEngine
+  def clientSession(dashHome: String, out: RemoteWriter, stdinName: String) = new ClientSession(dashHome, out, stdinName) with RhinoEngine
 
   def messageFactory(option: Option[File], args: Array[String], server: ServerPeer): MessageFactory = {
     option match {

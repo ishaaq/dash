@@ -18,10 +18,9 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
         val processResponse: PartialFunction[Resp, Unit] = {
           case Success(_, outs, response) =>
             print(outs)
-            out.println(">> " + response)
-          case Error(_, outs, response) =>
-            print(outs)
-            out.println(red("ERR! ") + response)
+            out.println(bold(">> " + response))
+          case Error(_, exceptionClass, message, stack) =>
+            out.println(red("ERR: " + exceptionClass) + " - " + message)
           case x => out.println(red("unexpected response: ") + x)
         }
 
@@ -30,7 +29,7 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
                 case command: Command => command.run(this)
                 case req: ResponseRequired => {
                   server !? req match {
-                    case None => out.println(red("ERR!") + " did not get a response")
+                    case None => out.println(red("ERR: ") + "did not get a response.")
                     case Some(resp) => processResponse(resp)
                   }
                 }

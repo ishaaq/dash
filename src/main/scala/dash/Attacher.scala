@@ -23,7 +23,11 @@ class Attacher(pid: Option[String], file: Option[File], args: Array[String]) {
               exit(1)
             }
             case Right(vm) => {
-              vm.loadAgent(dashHome + File.separator + "dash.jar", client.port.toString + "," + dashHome +"," + id)
+              val stdinName = file match {
+                case None => "<stdin>"
+                case Some(file) => file.getName
+              }
+              vm.loadAgent(dashHome + File.separator + "dash.jar", client.port.toString + "," + dashHome +"," + id + "," + stdinName)
               vm.detach
             }
           }

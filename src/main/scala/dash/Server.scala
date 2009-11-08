@@ -5,9 +5,9 @@ import scala.collection.mutable.ListBuffer
 import java.util.UUID
 import Config._
 
-class Server(id: UUID, port: Int, dashHome: String) {
+class Server(id: UUID, port: Int, dashHome: String, stdinName: String) {
     val out = new RemoteWriter
-    val session = clientSession(dashHome, out)
+    val session = clientSession(dashHome, out, stdinName)
     val client = new ClientPeer(port, receive, close)
 
     def receive(req: Req): Unit = {

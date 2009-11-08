@@ -1,9 +1,9 @@
 package dash
 
 import java.util.UUID
-import java.io.{PrintWriter, File}
+import java.io.{PrintWriter, StringWriter, File}
 
-abstract class ClientSession(val dashHome: String, val out: RemoteWriter) extends ScriptEngine {
+abstract class ClientSession(val dashHome: String, val out: RemoteWriter, val stdinName: String) extends ScriptEngine {
     private def tryEval(reqId: UUID, eval: => AnyRef): Message = {
       try {
           eval match {
@@ -11,9 +11,11 @@ abstract class ClientSession(val dashHome: String, val out: RemoteWriter) extend
             case resp => new Success(reqId, out.getAndReset, resp.toString)
           }
       } catch {
-        case err =>
-          err.printStackTrace(out.printWriter)
-          new Error(reqId, out.getAndReset, err.getClass + ": " + err.getMessage)
+        case err => {
+          val sw = new StringWriter
+          err.printStackTrace(new PrintWriter(sw))
+          new Error(reqId, err.getClass.getName, err.getMessage, sw.toString)
+        }
       }
     }
 
