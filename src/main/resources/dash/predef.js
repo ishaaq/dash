@@ -11,11 +11,11 @@ load = function() {
     __shell__ .run(scriptFile, args)
 }
 
-load.help = "Usage: load(scriptPath [,arg1] [,arg2]...)\n" +
-"Loads the javascript file specified and additionally, if specified, the arg\n" +
-"values will be used to construct an 'arguments' array that the script can access.\n" +
-"The scriptPath may be relative or absolute. If it cannot be located then a second\n" +
-"attempt is made to locate it inside dash's scripts directory."
+load.help = "Usage: {{bold:load(scriptPath [,arg1] [,arg2]...):}}\n" +
+"Loads the javascript file specified and additionally, if specified, the {{bold:arg:}}\n" +
+"values will be used to construct an {{bold:arguments:}} array that the script can access.\n" +
+"The {{bold:scriptPath:}} may be relative or absolute. If it cannot be located then a second\n" +
+"attempt is made to locate it inside dash's {{bold:scripts:}} directory."
 
 // adapted from http://joncom.be/code/realtypeof/
 function typeOf(v) {
@@ -30,16 +30,16 @@ function typeOf(v) {
     }
 }
 
-typeOf.help = "Usage: typeOf(value)\n" +
-"Displays the type of the value specified.  This implementation is a bit more complete\n" +
-"than the in-built javascript 'typeof' operator. In particular it differentiates between\n" +
+typeOf.help = "Usage: {{bold:typeOf(value):}}\n" +
+"Displays the type of the {{bold:value:}} argument.  This implementation is a bit more complete\n" +
+"than the in-built javascript {{bold:typeof:}} operator. In particular it differentiates between\n" +
 "object types."
 
 __desc__ = function() {
     var describe = function(name, verbose) {
         try {
             var obj = eval(name)
-            println(name + "\t: " + typeOf(obj))
+            println("{{bold:" + name + ":}}\t: " + typeOf(obj))
             if(verbose) {
                 if(typeof obj.help == "string") {
                     println(obj.help)
@@ -60,7 +60,7 @@ __desc__ = function() {
                 }
             }
         } catch (e) {
-            println("[ERR] " + name + " is not a valid identifier.")
+            println("{{red:ERR: :}}" + name + " is not a valid identifier.")
         }
     }
 
@@ -88,13 +88,13 @@ function print(str, newline) {
     }
     out.flush();
 }
-print.help = "Usage: print(string, boolean)\n" +
-"Prints the string and a newline char if the boolean is true. The printing is done on\n" +
-"the client side using dash's RemoteWriter implementation.\n"
+print.help = "Usage: {{bold:print(string, boolean):}}\n" +
+"Prints the {{bold:string:}} and a newline char if the {{bold:boolean:}} is true. The printing is done on\n" +
+"the client console using dash's {{bold:RemoteWriter:}} implementation.\n"
 
 function println(str) {
     print(str, true);
 }
-println.help = "Usage: println(string)\n" +
-"Prints the string and a newline char. The printing is done on\n" +
-"the client side using dash's RemoteWriter implementation.\n"
+println.help = "Usage: {{bold:println(string):}}\n" +
+"Prints the {{bold:string:}} and a newline char. The printing is done on\n" +
+"the client console using dash's {{bold:RemoteWriter:}} implementation.\n"
