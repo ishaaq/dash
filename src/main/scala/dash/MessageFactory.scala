@@ -25,7 +25,14 @@ trait ScriptCompletionAware {
     protected def checkScriptComplete(script: String) = true
 }
 
-class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with Completor with ScriptCompletionAware {
+trait InteractiveMessageFactory extends MessageFactory {
+    def welcomeMessage =  green("dash (" + version + ")") +
+""": the {{bold:D:}}ynamically {{bold:A:}}ttaching {{bold:SH:}}ell
+==============================================
+For help type {{bold::help:}} at the prompt."""
+}
+
+class InteractiveMessageFactoryImpl(server: ServerPeer) extends MessageFactory with Completor with ScriptCompletionAware with InteractiveMessageFactory {
     protected val tabCompleters = List(CommandTabCompleter, new RemoteTabCompleter(server))
     private val console = new ConsoleReader
 
@@ -33,11 +40,7 @@ class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with 
     console.addCompletor(this)
     console.setCompletionHandler(new CandidateListCompletionHandler)
 
-    out.println(
-      green("dash (" + version + ")") +
-""": the {{bold:D:}}ynamically {{bold:A:}}ttaching {{bold:SH:}}ell
-==============================================
-For help type {{bold::help:}} at the prompt.""")
+    out.println(welcomeMessage)
 
     def get = {
       console.readLine(new FormattedString(green("dash> "))) match {

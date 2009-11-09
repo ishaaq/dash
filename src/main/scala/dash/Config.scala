@@ -10,7 +10,7 @@ object Config {
 
   def messageFactory(option: Option[File], args: Array[String], server: ServerPeer): MessageFactory = {
     option match {
-      case None => new InteractiveMessageFactory(server) with RhinoScriptCompletionAware
+      case None => new InteractiveMessageFactoryImpl(server) with RhinoScriptCompletionAware
       case Some(script) => new ScriptMessageFactory(script.getAbsolutePath, args)
     }
   }
