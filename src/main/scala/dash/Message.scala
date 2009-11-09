@@ -16,7 +16,7 @@ trait ResponseRequired extends Req {
   val id = UUID.randomUUID
 }
 
-case class TabCompletionRequest(prefix: String) extends ResponseRequired
+case class TabCompletionRequest(prefix: String, cursor: Int) extends ResponseRequired
 case class Run(filePath: String, args: Array[String]) extends ResponseRequired
 case class Eval(command: String) extends ResponseRequired
 
@@ -25,13 +25,17 @@ sealed abstract case class Command(val aliases: List[String]) extends Req {
   def run(client: Client): Unit = client.out.println(red("Not implemented yet!"))
   def help: String = red("Not implemented yet!")
 }
+
+object Help {
+  val helpList = List[Command](new Help(""), new Desc(), Reset, Quit)
+  val helpMap: Map[String, Command] = Map[String, Command]() ++ List.flatten(for(cmd <- helpList) yield cmd.aliases.map((_, cmd)))
+}
+
 case class Help(command: String) extends Command("help") {
   def this() = this(null)
 
-  private val helpList = List[Command](this, new Desc(), Reset, Quit)
-  private val helpMap: Map[String, Command] = Map[String, Command]() ++ List.flatten(for(cmd <- helpList) yield cmd.aliases.map((_, cmd)))
-
   override def run(client: Client) = {
+    import Help.{helpList, helpMap}
     val println = client.out.println _
     command match {
         case null => {

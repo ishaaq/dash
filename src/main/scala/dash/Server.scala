@@ -22,8 +22,8 @@ class Server(id: UUID, port: Int, dashHome: String, stdinName: String) {
               client ! session.runScript(reqId.get, script, args)
             case Reset =>
               session.reset
-            case TabCompletionRequest(prefix) =>
-              client ! session.tabCompletion(reqId.get, prefix)
+            case TabCompletionRequest(prefix, cursor) =>
+              client ! session.tabCompletion(reqId.get, prefix, cursor)
             case Desc(jsRoot) => {
               val output = session.describe(jsRoot) match {
                 case Left(x) => List(red(x))

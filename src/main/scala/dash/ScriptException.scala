@@ -8,4 +8,3 @@ class ScriptException(val message: String, val cause: Throwable) extends Runtime
     override def printStackTrace(pw: PrintWriter) = cause.printStackTrace(pw)
     override def printStackTrace = cause.printStackTrace
 }
-

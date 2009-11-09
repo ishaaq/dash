@@ -26,6 +26,7 @@ trait ScriptCompletionAware {
 }
 
 class InteractiveMessageFactory(server: ServerPeer) extends MessageFactory with Completor with ScriptCompletionAware {
+    protected val tabCompleters = List(CommandTabCompleter, new RemoteTabCompleter(server))
     private val console = new ConsoleReader
 
     console.setHistory(new History(new File(System.getProperty("user.home"), ".dash_history")))
@@ -72,20 +73,19 @@ For help type {{bold::help:}} at the prompt.""")
     override def complete(buffer: String, cursor: Int, candidateList: JList[_]): Int = {
         val list = candidateList.asInstanceOf[JList[String]]
         if(buffer.trim.length > 0) {
-            server !? (new TabCompletionRequest(buffer)) match {
-              case None => buffer.length
-              case Some(x) => x match {
-                case TabCompletionList(_, completionList) => {
-                  completionList.foreach(list.add(_))
-                  Collections.sort(list)
-                  0
-                }
-                case x => {
-                  out.println(red("Invalid response: ") + x)
-                  0
-                }
+            val completions: List[String] = (for {
+              tabCompleter <- tabCompleters.elements
+              completions = tabCompleter.getCompletions(buffer, cursor)
+              if(completions.length > 0)
+            } yield completions).take(1).toList.flatten
+            completions match {
+              case Nil => 0
+              case completions => {
+                completions.foreach(list.add(_))
+                Collections.sort(list)
+                0
               }
-            }
+          }
         } else {
             buffer.length
         }

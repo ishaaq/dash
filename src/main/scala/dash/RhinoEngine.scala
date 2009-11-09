@@ -4,7 +4,7 @@ import ARM._
 import java.util.UUID
 import java.io.FileReader
 import Config._
-import org.mozilla.javascript.NativeArray
+import org.mozilla.javascript.{NativeArray, ScriptableObject, NativeJavaObject}
 
 trait RhinoEngine extends ScriptEngine {
   this: ClientSession =>
@@ -14,10 +14,32 @@ trait RhinoEngine extends ScriptEngine {
 
     private var engine = new Engine(out, stdinName)
 
-    def tabCompletion(id: UUID, prefix: String) = {
+    def tabCompletion(id: UUID, prefix: String, cursor: Int) = {
       val trimmed = prefix.trim
+      val matches = trimmed.lastIndexOf(".") match {
+        case -1 => engine.getPropertyIds.filter(_.startsWith(trimmed))
+        case dotIdx => {
+          val partial = prefix.substring(dotIdx + 1, prefix.length)
+          val objStr = prefix.substring(0, dotIdx)
+          val possibleCompletions = try {
+            engine.rawRun(objStr) match {
+              case j: NativeJavaObject => {
+                val actual = j.unwrap
+                val fields = actual.getClass.getFields.map(_.getName)
+                val methods = actual.getClass.getMethods.map(_.getName + '(')
+                List[String]() ++ fields ++ methods
+              }
+              case s: ScriptableObject => engine.getPropertyIds(s)
+              case _ => Nil
+            }
+          } catch {
+            case e => Nil
+          }
+          possibleCompletions.filter(_.startsWith(partial)).sort(_ < _).map(objStr + '.' + _)
+        }
+      }
 
-      new TabCompletionList(id, engine.getPropertyIds.filter(_.startsWith(trimmed)).toList)
+      new TabCompletionList(id, matches)
     }
 
     def reset = engine = new Engine(out, stdinName)
@@ -109,6 +131,10 @@ trait RhinoEngine extends ScriptEngine {
               throw je
             }
           }
+        }
+
+        def rawRun(string: String): AnyRef = withContext  { cx =>
+          cx.evaluateString(scope, string, stdinName, 1, null)
         }
 
         def run(string: String): AnyRef = withContext  { cx =>

@@ -65,7 +65,7 @@ trait JavaScriptEngine extends ScriptEngine {
 
     def run(script: String, args: NativeArray): AnyRef = eval(script, convertArgs(args))
 
-    def tabCompletion(id: UUID, prefix: String) = {
+    def tabCompletion(id: UUID, prefix: String, cursor: Int) = {
       doLoadPredef
       val trimmed = prefix.trim
       new TabCompletionList(id, bindings.keySet.filter(_.startsWith(trimmed)).toList)

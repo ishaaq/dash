@@ -1,9 +1,5 @@
 Stuff I'd like to do to enhance dash (in no particular order) along with broad complexity estimate (TRIVIAL/MEDIUM/HARD)
 
-- Tab-completion on commands (MEDIUM)
-
-- Tab-completion of javascript object properties (MEDIUM)
-
 - Ability to dynamically inject tab-completion strategies via javascript - this will enable scripts to define custom
   tab-completion, for e.g. to complete the input variables for a given function. (HARD)
 
@@ -13,9 +9,6 @@ Stuff I'd like to do to enhance dash (in no particular order) along with broad c
 
 - Investigate how to get MINA to unbind the server socket after client and server connect - so that no other app can
   then communicate with dash. (MEDIUM)
-
-- Write script(s) with "best-practice" examples - i.e. explain the JavaScript module pattern
-  http://www.wait-till-i.com/2007/07/24/show-love-to-the-module-pattern/ (MEDIUM)
 
 - Use something like jarjar to rename dash's deps so we don't have classloader clashes when the app being attached
   to already has differing versions of the deps (MEDIUM)
