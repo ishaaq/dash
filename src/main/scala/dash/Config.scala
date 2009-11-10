@@ -5,12 +5,12 @@ import jline.ANSIBuffer.ANSICodes.attrib
 import java.net.InetAddress.getByName
 
 object Config {
-  //def clientSession(dashHome: String, out: RemoteWriter) = new ClientSession(dashHome, out) with JavaScriptEngine
-  def clientSession(dashHome: String, out: RemoteWriter, stdinName: String) = new ClientSession(dashHome, out, stdinName) with RhinoEngine
+  //def clientSession(dashHome: String, out: RemoteWriter, stdinName: String) = new ClientSession(dashHome, out, stdinName) with JavaScriptEngine
+  def clientSession(dashHome: String, out: RemoteWriter, stdinName: String) = new ClientSession(dashHome, out, stdinName) with internal.RhinoEngine
 
   def messageFactory(option: Option[File], args: Array[String], server: ServerPeer): MessageFactory = {
     option match {
-      case None => new InteractiveMessageFactoryImpl(server) with RhinoScriptCompletionAware
+      case None => new InteractiveMessageFactoryImpl(server) with internal.RhinoScriptCompletionAware
       case Some(script) => new ScriptMessageFactory(script.getAbsolutePath, args)
     }
   }

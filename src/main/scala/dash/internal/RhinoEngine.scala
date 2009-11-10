@@ -1,11 +1,19 @@
-package dash
+package dash.internal
 
 import ARM._
 import java.util.UUID
 import java.io.FileReader
 import Config._
-import org.mozilla.javascript.{NativeArray, ScriptableObject, NativeJavaObject}
+import sun.org.mozilla.javascript.internal.{NativeArray, ScriptableObject, NativeJavaObject}
 
+/**
+ * This Rhino engine unlike the JavaScriptEngine relies on internal classes in the sun JVM. We're doing this
+ * so that we can take advantage of the more advanced features available in Rhino instead of the handicapped
+ * functionality available through the javax.scripting API. We also are doing this instead of using a proper
+ * dependency to Rhino-proper because we want to reduce the number of deps dash has at runtime - reducing the
+ * chances of classloader hell when attaching to an app that already has a different Rhino version in its
+ * System classloader.
+ */
 trait RhinoEngine extends ScriptEngine {
   this: ClientSession =>
 
@@ -88,11 +96,11 @@ trait RhinoEngine extends ScriptEngine {
       }
     }
 
-    import org.mozilla.javascript.ScriptableObject.{DONTENUM, PERMANENT, READONLY}
-    import org.mozilla.javascript.{Context, NativeFunction, NativeJavaObject}
+    import sun.org.mozilla.javascript.internal.ScriptableObject.{DONTENUM, PERMANENT, READONLY}
+    import sun.org.mozilla.javascript.internal.{Context, NativeFunction, NativeJavaObject}
     import java.io.{Reader, InputStreamReader}
-    import org.mozilla.javascript.EcmaError
-    import org.mozilla.javascript.JavaScriptException
+    import sun.org.mozilla.javascript.internal.EcmaError
+    import sun.org.mozilla.javascript.internal.JavaScriptException
     class Engine(out: RemoteWriter, stdinName: String) extends RhinoScopeWrapper {
         withContext { cx =>
             val hiddenConst = READONLY | PERMANENT | DONTENUM

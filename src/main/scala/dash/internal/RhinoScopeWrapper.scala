@@ -1,6 +1,6 @@
-package dash
+package dash.internal
 
-import org.mozilla.javascript.{ScriptableObject, Context, Undefined, ImporterTopLevel}
+import sun.org.mozilla.javascript.internal.{ScriptableObject, Context, Undefined, ImporterTopLevel}
 
 trait RhinoScopeWrapper {
     protected val scope = withContext { cx => new ImporterTopLevel(cx) }
