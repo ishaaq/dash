@@ -6,7 +6,7 @@ import Config._
 sealed trait Message
 
 import org.apache.mina.filter.reqres.{Request => MRequest}
-class Request(req: ResponseRequired) extends MRequest(req.id, req, Config.requestTimeout) {
+class Request(req: ResponseRequired) extends MRequest(req.id, req, 0) {
   val id = getId.asInstanceOf[UUID]
 }
 
