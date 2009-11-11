@@ -10,7 +10,6 @@ load = function() {
     var args = arguments.length > 1 ? Array.prototype.slice.call(arguments, 1) : []
     __shell__ .run(scriptFile, args)
 }
-
 load.help = "Usage: {{bold:load(scriptPath [,arg1] [,arg2]...):}}\n" +
 "Loads the javascript file specified and additionally, if specified, the {{bold:arg:}}\n" +
 "values will be used to construct an {{bold:arguments:}} array that the script can access.\n" +
@@ -29,7 +28,6 @@ function typeOf(v) {
         return typeof(v)
     }
 }
-
 typeOf.help = "Usage: {{bold:typeOf(value):}}\n" +
 "Displays the type of the {{bold:value:}} argument.  This implementation is a bit more complete\n" +
 "than the in-built javascript {{bold:typeof:}} operator. In particular it differentiates between\n" +
@@ -50,17 +48,22 @@ __desc__ = function() {
                     }
                 }
                 if(typeOf(obj) == "object") {
-                    for(i in obj) {
+                    println("--------------------------------------------------------")
+                    var propNames = []
+                    for(var i in obj) {
                         // no point describing the help string if it exists, we've already
                         // printed it above
                         if(i != "help" || typeof obj[i] != 'string') {
-                            describe(name + "." + i, false)
+                            propNames.push(i)
                         }
+                    }
+                    for(var i in propNames.sort()) {
+                        describe(name + "." + i, false)
                     }
                 }
             }
         } catch (e) {
-            println("{{red:ERR: :}}" + name + " is not a valid identifier.")
+            println("{{red:ERR: :}}'" + name + "' is not a valid identifier.")
         }
     }
 
