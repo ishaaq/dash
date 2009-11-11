@@ -53,12 +53,12 @@ __desc__ = function() {
                     for(var i in obj) {
                         // no point describing the help string if it exists, we've already
                         // printed it above
-                        if(i != "help" || typeof obj[i] != 'string') {
+                        if(typeof i == "string" && (i != "help" || typeof obj[i] != 'string')) {
                             propNames.push(i)
                         }
                     }
                     for(var i in propNames.sort()) {
-                        describe(name + "." + i, false)
+                        describe(name + "." + propNames[i], false)
                     }
                 }
             }

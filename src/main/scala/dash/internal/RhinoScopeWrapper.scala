@@ -5,14 +5,8 @@ import sun.org.mozilla.javascript.internal.{ScriptableObject, Context, Undefined
 trait RhinoScopeWrapper {
     protected val scope = withContext { cx => new ImporterTopLevel(cx) }
 
-    def withContext[R](block: Context => R): R = {
-      val cx = Context.enter
-      try {
-          block(cx)
-      } finally {
-        Context.exit
-      }
-    }
+    def withContext[R] = RhinoScopeWrapper.withContext[R] _
+
     def getPropertyIds(obj: ScriptableObject): List[String] = {
       val propIds = (for(propId <- ScriptableObject.getPropertyIds(obj)
           if(propId.isInstanceOf[String])
@@ -32,4 +26,15 @@ trait RhinoScopeWrapper {
 
     def deleteProperty(obj: ScriptableObject)(prop: String) = ScriptableObject.deleteProperty(obj, prop)
     def deleteProperty: String => Boolean = deleteProperty(scope)_
+}
+
+object RhinoScopeWrapper {
+    def withContext[R](block: Context => R): R = {
+      val cx = Context.enter
+      try {
+          block(cx)
+      } finally {
+        Context.exit
+      }
+    }
 }

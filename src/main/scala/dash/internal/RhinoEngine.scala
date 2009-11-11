@@ -99,14 +99,20 @@ trait RhinoEngine extends ScriptEngine {
     import sun.org.mozilla.javascript.internal.ScriptableObject.{DONTENUM, PERMANENT, READONLY}
     import sun.org.mozilla.javascript.internal.{Context, NativeFunction, NativeJavaObject}
     import java.io.{Reader, InputStreamReader}
-    import sun.org.mozilla.javascript.internal.EcmaError
-    import sun.org.mozilla.javascript.internal.JavaScriptException
+    import sun.org.mozilla.javascript.internal.{EcmaError, JavaScriptException, LazilyLoadedCtor}
+
     class Engine(out: RemoteWriter, stdinName: String) extends RhinoScopeWrapper {
         withContext { cx =>
+            new LazilyLoadedCtor(scope, "JSAdapter", "com.sun.script.javascript.JSAdapter", false)
             val hiddenConst = READONLY | PERMANENT | DONTENUM
             val const = READONLY | PERMANENT
             scope.defineProperty("out", Context.javaToJS(out, scope), const)
             scope.defineProperty("__shell__", Context.javaToJS(RhinoEngine.this, scope), hiddenConst)
+            val adapter = new JavaAdapter()
+            adapter.setParentScope(scope)
+            adapter.setPrototype(ScriptableObject.getFunctionPrototype(scope))
+            scope.defineProperty("JavaAdapter", adapter, hiddenConst);
+
             val predefJs = "predef.js"
             withCloseable(new InputStreamReader(getClass.getResourceAsStream(predefJs))) { reader =>
                 cx.evaluateReader(scope, reader, predefJs, 1, null)
@@ -115,7 +121,9 @@ trait RhinoEngine extends ScriptEngine {
             val enumerate = getProperty(enumerateProp)
             val enumerateableProps = enumerate.asInstanceOf[NativeArray].toList
             deleteProperty(enumerateProp)
-            getPropertyIds.foreach{ prop =>scope.setAttributes(prop, if(enumerateableProps.contains(prop)) const else hiddenConst)}
+            (getPropertyIds ++ List("importClass", "importPackage")).foreach { prop =>
+              scope.setAttributes(prop, if(enumerateableProps.contains(prop)) const else hiddenConst)
+            }
             scope
         }
 
