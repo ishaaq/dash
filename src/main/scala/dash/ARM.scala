@@ -2,6 +2,9 @@ package dash
 
 import java.io.Closeable
 
+/**
+ * Automatic Resource Management.
+ */
 object ARM {
   /**
    * Structural Type closeable

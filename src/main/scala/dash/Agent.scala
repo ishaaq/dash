@@ -1,9 +1,11 @@
 package dash
 
 import java.lang.instrument.Instrumentation
-import Config._
 import java.util.UUID
 
+/**
+ * An Attach API agent.
+ */
 object Agent {
   def agentmain(args: String, instrumentation: Instrumentation) {
       val arguments = args.split(",")

@@ -2,6 +2,9 @@ package dash
 
 import scala.util.parsing.combinator.RegexParsers
 
+/**
+ * Parses requests made in the interactive console.
+ */
 class RequestParser extends RegexParsers {
 
   def parseRequest(str: String): Either[ParseError, Req] = {

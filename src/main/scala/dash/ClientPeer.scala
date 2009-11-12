@@ -2,13 +2,12 @@ package dash
 
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
-import org.apache.mina.core.RuntimeIoException
-import org.apache.mina.core.future.ConnectFuture
-import org.apache.mina.transport.socket.nio.NioSocketConnector
 import org.apache.mina.filter.codec.ProtocolCodecFilter
-import org.apache.mina.transport.socket.nio.NioProcessor
+import org.apache.mina.transport.socket.nio.{NioSocketConnector, NioProcessor}
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory
-
+/**
+ * The Server's peer connection to the Client.
+ */
 class ClientPeer(port: Int, receive: Req => Unit, close: => Unit) {
     private val executor = Executors.newCachedThreadPool(DaemonThreadFactory)
     private val connector = {
@@ -32,7 +31,7 @@ class ClientPeer(port: Int, receive: Req => Unit, close: => Unit) {
     def !(message: Message): Unit = ioSession.write(message)
 
     import org.apache.mina.core.session.IoSession
-    import org.apache.mina.core.service.{IoHandler, IoHandlerAdapter}
+    import org.apache.mina.core.service.IoHandlerAdapter
     class ServerSessionHandler extends IoHandlerAdapter {
         override def messageReceived(ioSession: IoSession, message: AnyRef) = {
             message match {

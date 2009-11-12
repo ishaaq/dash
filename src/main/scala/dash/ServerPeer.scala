@@ -9,6 +9,9 @@ import org.apache.mina.core.session.IoSession
 import org.apache.mina.filter.reqres.RequestResponseFilter
 import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
+/**
+ * The Client's peer connection to the Server.
+ */
 class ServerPeer(start: => Unit, out: => Printer) {
   private var session: IoSession = _
   private val executor = new ScheduledThreadPoolExecutor(5)
@@ -26,13 +29,23 @@ class ServerPeer(start: => Unit, out: => Printer) {
   }
   lazy val port = acceptor.getLocalAddress.getPort
 
+  /**
+   * Sends an asynchronous request. Returns a future.
+   */
   def !!(req: Req) = session.write(req match {
         case req: ResponseRequired => new Request(req)
         case _ => req
       })
 
+  /**
+   * Sends an asynchoronous request. Nothing returned - use
+   * this to 'fire and forget'.
+   */
   def !(req: Req): Unit = !!(req)
 
+  /**
+   * Sends a synchronous request, returns an option of a response.
+   */
   def !?(req: ResponseRequired): Option[Resp] = {
     val request = new Request(req)
     executor.submit(new Runnable {
@@ -45,7 +58,7 @@ class ServerPeer(start: => Unit, out: => Printer) {
     }
   }
 
-  import org.apache.mina.core.service.{IoHandler, IoHandlerAdapter}
+  import org.apache.mina.core.service.IoHandlerAdapter
   class ClientSessionHandler extends IoHandlerAdapter {
     override def sessionOpened(ioSession: IoSession) = {
       if(session == null) {

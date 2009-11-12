@@ -8,6 +8,9 @@ import java.security.{AccessController, PrivilegedActionException, PrivilegedExc
 import org.kohsuke.args4j.{Option => Opt, CmdLineParser, Argument, CmdLineException}
 import org.kohsuke.args4j.spi.StringArrayOptionHandler
 
+/**
+ * Main entry point.
+ */
 object Cli {
   private val systemLoader = ClassLoader.getSystemClassLoader().asInstanceOf[URLClassLoader]
   private val method = classOf[URLClassLoader].getDeclaredMethod("addURL", classOf[URL])

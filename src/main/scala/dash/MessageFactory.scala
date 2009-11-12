@@ -5,6 +5,10 @@ import java.util.{List => JList, Collections}
 import jline.{ConsoleReader, History, CandidateListCompletionHandler, Completor}
 import Config._
 
+/**
+ * The Client uses a MessageFactory implementation to retrieve Message instances from
+ * the user.
+ */
 trait MessageFactory {
     implicit def formattedString2String(fString: FormattedString): String = format(fString)
     implicit def rawString2FormattedStrig(raw: String) = new FormattedString(raw)
@@ -32,6 +36,10 @@ trait InteractiveMessageFactory extends MessageFactory {
 For help type {{bold::help:}} at the prompt."""
 }
 
+/**
+ * A MessageFactory that retrieves Message instances from the user's console. Uses JLine
+ * to support history and tab-completion.
+ */
 class InteractiveMessageFactoryImpl(server: ServerPeer) extends MessageFactory with Completor with ScriptCompletionAware with InteractiveMessageFactory {
     protected val tabCompleters = List(CommandTabCompleter, new RemoteTabCompleter(server))
     private val console = new ConsoleReader
@@ -100,6 +108,10 @@ class Decorator(actual: Printer, decorator: String => String) {
     def println(str: String) = actual.println(decorator(str))
 }
 
+/**
+ * A MessageFactory implementation that retrieves a single Message that consists of the command
+ * to run the contents of a script file.
+ */
 class ScriptMessageFactory(script: String, args: Array[String]) extends MessageFactory {
     private var hasRun = false
     def get = hasRun match {

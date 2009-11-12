@@ -1,6 +1,9 @@
 package dash.internal
+
 import sun.org.mozilla.javascript.internal.{Context, Scriptable, ScriptableObject, Function, Wrapper}
+import java.security.{AccessController, PrivilegedExceptionAction}
 import java.lang.reflect.{Proxy, InvocationHandler, Method}
+
 /**
  * A replacement for the missing JavaAdapter Rhino functionality that Sun
  * removed when they packaged up Rhino for javax.scripting. Works by
@@ -39,7 +42,6 @@ class JavaAdapter extends ScriptableObject with Function {
                                new Handler[P](obj, scope)).asInstanceOf[P]
 }
 
-import java.security.{AccessController, PrivilegedExceptionAction}
 class Handler[T](actual: AnyRef, scope: Scriptable) extends InvocationHandler {
    def invoke(proxy: AnyRef, method: Method, args: Array[AnyRef]): AnyRef = {
            AccessController.doPrivileged(new PrivilegedExceptionAction[AnyRef] {

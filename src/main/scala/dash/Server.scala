@@ -1,10 +1,14 @@
 package dash
 
-import java.io.{Writer, PrintWriter}
-import scala.collection.mutable.ListBuffer
 import java.util.UUID
 import Config._
 
+/**
+ * dash's server interface. Somewhat unintuitively we create a TCP/IP client socket
+ * here and connect to the Client from here instead of the other way round.
+ * This is done as a security measure - i.e. we don't want to have the application
+ * open up a server socket.
+ */
 class Server(id: UUID, port: Int, dashHome: String, stdinName: String) {
     val out = new RemoteWriter
     val session = clientSession(dashHome, out, stdinName)
@@ -41,11 +45,13 @@ class Server(id: UUID, port: Int, dashHome: String, stdinName: String) {
     }
 }
 
+import java.io.{Writer, PrintWriter}
+import scala.collection.mutable.ListBuffer
 class RemoteWriter extends Writer {
     private val sb = new StringBuilder
     private val buffer = new ListBuffer[String]
+    private val printWriter = new PrintWriter(this, true)
 
-    val printWriter = new PrintWriter(this, true)
     def close = flush
     def flush = {
       if(sb.length > 0) {

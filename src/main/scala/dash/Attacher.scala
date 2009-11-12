@@ -8,6 +8,9 @@ import java.net.ServerSocket
 import java.lang.management.ManagementFactory
 import Config._
 
+/**
+ * Selects and attaches to a running JVM.
+ */
 class Attacher(pid: Option[String], file: Option[File], args: Array[String]) {
     val dashHome = System.getProperty(Config.dashHomeClientProperty)
     val id = UUID.randomUUID

@@ -9,6 +9,11 @@ import scala.collection.jcl.Conversions.convertSet
 import scala.io.Source
 import _root_.sun.org.mozilla.javascript.internal.NativeArray
 
+/**
+ * An implementation of ScriptEngine that uses the builtin javax.script library in Java 6.
+ * This is not as full featured as the Rhino one and is only retained here for completeness
+ * sake. Turn it on by making the appropriate changes in the Config class.
+ */
 trait JavaScriptEngine extends ScriptEngine {
     this: ClientSession =>
 
@@ -24,7 +29,7 @@ trait JavaScriptEngine extends ScriptEngine {
     private def bindings = wrapper.bindings
 
 
-    private val predef = Source.fromInputStream(getClass.getResourceAsStream("predef.js")).getLines.mkString("")
+    private val predef = Source.fromInputStream(getClass.getResourceAsStream("internal/predef.js")).getLines.mkString("")
 
     private def evalString(string: String) = engine.eval(string)
     private def evalScript(script: String) = {

@@ -3,9 +3,19 @@ package dash
 import java.util.UUID
 import Config._
 
+/**
+ * The dash Client and Server instances communicate via message-passing. All messages
+ * implement this trait.
+ */
 sealed trait Message
 
+
 import org.apache.mina.filter.reqres.{Request => MRequest}
+/**
+ * The Request is an extension of the Apache MINA Request class that encapsulates a
+ * ResponseRequired message. MINA will take care of matching the request and the response
+ * via the request id.
+ */
 class Request(req: ResponseRequired) extends MRequest(req.id, req, 0) {
   val id = getId.asInstanceOf[UUID]
 }

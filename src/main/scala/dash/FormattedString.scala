@@ -2,6 +2,9 @@ package dash
 
 import jline.ANSIBuffer.ANSICodes.attrib
 
+/**
+ * ANSI-code formatted strings.
+ */
 class FormattedString(val rawString: String) {
     def getString(useFormatting: Boolean): String = {
       val controlSeq = FormattedStringParser.parse(rawString).get

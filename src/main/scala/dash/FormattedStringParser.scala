@@ -1,6 +1,9 @@
 package dash
 
 import scala.util.parsing.combinator.RegexParsers
+/**
+ * Parses and formats FormattedString instances.
+ */
 object FormattedStringParser extends RegexParsers {
 
     override def skipWhitespace = false

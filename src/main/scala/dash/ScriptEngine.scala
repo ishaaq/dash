@@ -2,6 +2,9 @@ package dash
 
 import java.util.UUID
 
+/**
+ * Contract for scripting engine implementations.
+ */
 trait ScriptEngine {
   this: ClientSession =>
 
