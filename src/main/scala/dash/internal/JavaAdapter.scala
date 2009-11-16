@@ -64,7 +64,8 @@ class Handler[T](actual: AnyRef, scope: Scriptable) extends InvocationHandler {
                case null => scope
                case pScope => pScope
              }
-             f.call(ctx, pScope, local, if(args != null) args else Array[AnyRef]())
+             val sArgs = if(args != null) args.map(Context.javaToJS(_, scope)) else Array[AnyRef]()
+             f.call(ctx, pScope, local, sArgs)
            }
            case _ => throw new NoSuchMethodException("no method: " + methodName)
          }
