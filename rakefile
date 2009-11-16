@@ -13,15 +13,15 @@ desc 'runs a full build - clean, package, tarball'
 task :fullBuild => ["cleanPackage", "tarball"]
 
 task :clean do
-    sbt "clean"
+    rm_rf TARGET, :secure => true
 end
 
 task :package do
     sbt "update package"
 end
 
-task :cleanPackage do
-    sbt "clean update package"
+task :cleanPackage => ["clean"] do
+    sbt "update package"
 end
 
 task :tarball do
