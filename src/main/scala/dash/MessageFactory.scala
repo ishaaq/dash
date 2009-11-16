@@ -41,7 +41,8 @@ For help type {{bold::help:}} at the prompt."""
  * to support history and tab-completion.
  */
 class InteractiveMessageFactoryImpl(server: ServerPeer) extends MessageFactory with Completor with ScriptCompletionAware with InteractiveMessageFactory {
-    protected val tabCompleters = List(CommandTabCompleter, new RemoteTabCompleter(server))
+    private val remoteTabCompleter = new RemoteTabCompleter(server)
+    private val tabCompleters = List(CommandTabCompleter, new DescTabCompleter(remoteTabCompleter), remoteTabCompleter)
     private val console = new ConsoleReader
 
     console.setHistory(new History(new File(System.getProperty("user.home"), ".dash_history")))
@@ -84,17 +85,16 @@ class InteractiveMessageFactoryImpl(server: ServerPeer) extends MessageFactory w
     override def complete(buffer: String, cursor: Int, candidateList: JList[_]): Int = {
         val list = candidateList.asInstanceOf[JList[String]]
         if(buffer.trim.length > 0) {
-            val completions: List[String] = (for {
+            val completions: Option[(Array[String], Int)] = (for {
               tabCompleter <- tabCompleters.elements
-              completions = tabCompleter.getCompletions(buffer, cursor)
-              if(completions.length > 0)
-            } yield completions).take(1).toList.flatten
+              (completions, offset) = tabCompleter.getCompletions(buffer, cursor)
+            } yield (completions, offset)).find(x => { x._1.size > 0 })
             completions match {
-              case Nil => 0
-              case completions => {
-                completions.foreach(list.add(_))
+              case None => 0
+              case Some((matches, offset)) => {
+                matches.foreach(list.add(_))
                 Collections.sort(list)
-                0
+                offset
               }
           }
         } else {

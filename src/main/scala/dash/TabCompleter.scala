@@ -8,32 +8,51 @@ import Config._
  * to the user.
  */
 trait TabCompleter {
-    val EMPTY_ARR = Array[String]()
+    val NO_RESULT = (Array[String](), 0)
     /**
      * Returns the possible completions for the given line buffer. If the completer
      * has no suggestions it should return an empty array (not null). To keep the cursor
      * position accurate the buffer is not trimmed however the buffer is guaranteed to
      * not be null or even empty after trimming.
      */
-    def getCompletions(buffer: String, cursor: Int): Array[String]
+    def getCompletions(buffer: String, cursor: Int): (Array[String], Int)
 }
 
 object CommandTabCompleter extends TabCompleter {
     private val commands: Set[String] = Set() ++ List.flatten(Help.helpList.map(_.aliases)).map(":" + _ + " ")
-    def getCompletions(buffer: String, cursor: Int) = commands.filter(_.startsWith(buffer)).toArray
+    def getCompletions(buffer: String, cursor: Int) = (commands.filter(_.startsWith(buffer)).toArray, 0)
 }
 
+class DescTabCompleter(remoteTabCompleter: RemoteTabCompleter) extends TabCompleter {
+  private val DescRegex = ("^(:" + new Desc().aliases(0) + "\\s)?(.*)").r
+  def getCompletions(buffer: String, cursor: Int) = {
+    val DescRegex(prefix, suffix) = buffer
+    if(prefix != null) {
+        val offset = prefix.length;
+        val substring = buffer.substring(offset, buffer.length)
+        substring.trim match {
+          case "" => NO_RESULT
+          case _ => remoteTabCompleter.getCompletions(substring, cursor) match {
+            case NO_RESULT => NO_RESULT
+            case (matches, matchOffset) => (matches, offset + matchOffset)
+          }
+        }
+    } else {
+        NO_RESULT
+    }
+  }
+}
 
 class RemoteTabCompleter(server: ServerPeer) extends TabCompleter {
     import java.util.Collections
     def getCompletions(buffer: String, cursor: Int) = {
         server !? (new TabCompletionRequest(buffer, cursor)) match {
-              case None => EMPTY_ARR
+              case None => NO_RESULT
               case Some(x) => x match {
-                case TabCompletionList(_, completionList) => completionList.toArray
+                case TabCompletionList(_, completionList) => (completionList.toArray, 0)
                 case x => {
                     println(red("Invalid response: ") + x)
-                    EMPTY_ARR
+                    NO_RESULT
                 }
             }
         }
