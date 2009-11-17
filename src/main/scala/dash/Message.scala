@@ -49,15 +49,15 @@ case class Help(command: String) extends Command("help") {
     val println = client.out.println _
     command match {
         case null => {
-            println("EITHER run valid javascript code (which will be executed on the remote app's JVM):")
-            println(green("dash> ") + "println('hello dash world!')\n")
-            println("OR execute a dash command.")
-            println("Commands are run by prefixing them with a colon (:). For e.g.:")
-            println(green("dash> ") + ":" + red("<command>"))
-            println("Where " + red("<command>") + " is one of the following:")
+            println("""EITHER run valid javascript code (which will be executed on the remote app's JVM):
+{{green:dash>:}} println('hello dash world!')
+OR execute a dash command.
+Commands are run by prefixing them with a colon (:). For e.g.:
+{{green:dash>:}} :{{bold:<command>:}}
+Where {{bold:<command>:}} is one of the following:""")
             (for(cmd <- helpList) yield "    " + cmd.aliases.mkString("/")).foreach(println(_))
             println("For further help on a particular command type:")
-            println(":help " + red("<command>"))
+            println(":help {{bold:<command>:}}")
           }
         case command => {
             helpMap.get(command) match {
@@ -68,9 +68,9 @@ case class Help(command: String) extends Command("help") {
      }
   }
 
-  override val help = "Displays Help content. Can be run in two modes:\n" +
-      "    " + red(":help") + "\t\t - Show application help.\n" +
-      "    " + red(":help <command>") + "\t - Display help for " + red("<command>.")
+  override val help = """Displays Help content. Can be run in two modes:
+    {{bold::help:}}           - Show application help.
+    {{bold::help <command>:}} - Display help for {{bold:<command>:}}."""
 }
 
 case object Reset extends Command("reset") {
@@ -88,9 +88,9 @@ case class Desc(jsRoot: String) extends Command("desc") with ResponseRequired {
   }
   override val help ="""Describes the contents of a javascript variable reference in session.
 The variable may refer to a primitive, a function or an object.
-Can be run in two modes:\n""" +
-        "    " + red(":desc") + "\t\t - Describes the global variables in the session.\n" +
-        "    " + red(":desc <var>") + "\t - Describes the javascript primitive/function/object specified by " + red("<var>") + '.'
+Can be run in two modes:
+    {{bold::desc:}}       - Describes the global variables in the session.
+    {{bold::desc <var>:}} - Describes the javascript primitive/function/object specified by {{bold:<var>:}}."""
 }
 
 case object Noop extends Command("") {
@@ -99,7 +99,7 @@ case object Noop extends Command("") {
 
 case object Quit extends Command(List("exit", "quit")) {
   override def run(client: Client) = exit
-  override def help = "Shuts down the dash client. You can also shut down by pressing " + red("<CNTRL-C>") + " or " + red("<CNTRL-D>.")
+  override def help = "Shuts down the dash client. You can also shut down by pressing {{bold:<CNTRL-C>:}} or {{bold:<CNTRL-D>:}}."
 }
 
 @serializable
