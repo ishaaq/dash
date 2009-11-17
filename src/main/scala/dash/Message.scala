@@ -82,7 +82,10 @@ case class Desc(jsRoot: String) extends Command("desc") with ResponseRequired {
   def this() = this("")
   override def run(client: Client) = {
     client.server !? this match {
-      case Some(Description(_, out)) => client.print(out)
+      case Some(Description(_, error)) => error match {
+        case Some(error) => client.print(List(error))
+        case None =>
+      }
       case x => client.out.println(red("Unexpected response: ") + x)
     }
   }
@@ -105,6 +108,8 @@ case object Quit extends Command(List("exit", "quit")) {
 @serializable
 sealed abstract case class Resp(val reqId: UUID) extends Message
 case class TabCompletionList(id: UUID, list: List[String]) extends Resp(id)
-case class Success(id: UUID, out: List[String], response: String) extends Resp(id)
+case class Success(id: UUID, response: String) extends Resp(id)
 case class Error(id: UUID, errorClass: String, message: String, stack: String) extends Resp(id)
-case class Description(id: UUID, out: List[String]) extends Resp(id)
+case class Description(id: UUID, error: Option[String]) extends Resp(id)
+
+case class Print(string: String) extends Message

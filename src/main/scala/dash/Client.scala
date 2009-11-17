@@ -22,8 +22,7 @@ class Client(id: UUID, file: Option[File], args: Array[String]) {
 
     private def start: Unit = {
         val processResponse: PartialFunction[Resp, Unit] = {
-          case Success(_, outs, response) =>
-            print(outs)
+          case Success(_, response) =>
             out.println(bold(">> " + response))
           case Error(_, exceptionClass, message, stack) =>
             out.println(red("ERR: " + exceptionClass) + " - " + message)

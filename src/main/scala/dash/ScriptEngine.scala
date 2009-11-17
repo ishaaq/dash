@@ -13,5 +13,5 @@ trait ScriptEngine {
   protected def eval(command: String): AnyRef
   protected def eval(script: String, args: Array[String]): AnyRef
   def tabCompletion(reqId: UUID, prefix: String, cursor: Int): TabCompletionList
-  def describe(root: String): Either[String, List[String]]
+  def describe(root: String): Option[String]
 }

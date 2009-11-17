@@ -1,4 +1,4 @@
-package dash
+  package dash
 
 import java.util.UUID
 import Config._
@@ -10,7 +10,7 @@ import Config._
  * open up a server socket.
  */
 class Server(id: UUID, port: Int, dashHome: String, stdinName: String) {
-    val out = new RemoteWriter
+    val out = new RemoteWriter(this)
     val session = clientSession(dashHome, out, stdinName)
     val client = new ClientPeer(port, receive, close)
 
@@ -29,11 +29,7 @@ class Server(id: UUID, port: Int, dashHome: String, stdinName: String) {
             case TabCompletionRequest(prefix, cursor) =>
               client ! session.tabCompletion(reqId.get, prefix, cursor)
             case Desc(jsRoot) => {
-              val output = session.describe(jsRoot) match {
-                case Left(x) => List(red(x))
-                case Right(output) => output
-              }
-              client ! new Description(reqId.get, output)
+              client ! new Description(reqId.get, session.describe(jsRoot))
             }
             case x => println("unexpected dash message: " + x)
       }
@@ -47,29 +43,23 @@ class Server(id: UUID, port: Int, dashHome: String, stdinName: String) {
 
 import java.io.{Writer, PrintWriter}
 import scala.collection.mutable.ListBuffer
-class RemoteWriter extends Writer {
+class RemoteWriter(server: Server) extends Writer {
+    private lazy val client = server.client
     private val sb = new StringBuilder
-    private val buffer = new ListBuffer[String]
     private val printWriter = new PrintWriter(this, true)
 
     def close = flush
     def flush = {
       if(sb.length > 0) {
-          buffer += sb.toString
+          client ! Print(sb.toString)
           sb.clear
        }
     }
 
     def write(chars: Array[Char], offset: Int, length: Int) = sb.append(chars, offset, length)
 
-    def print(str: String) = append(str)
-    def println(str: String) = append(str + "\n")
-
-    def getAndReset = {
-      val list = buffer.toList
-      buffer.clear
-      list
-    }
+    def print(str: String) = client ! Print(str)
+    def println(str: String) = client ! Print(str + "\n")
 
     val help = "A custom implementation of java.io.Writer that outputs remotely to the dash client's console."
 }

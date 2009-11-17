@@ -78,5 +78,12 @@ class ServerPeer(start: => Unit, out: => Printer) {
       // TODO - perhaps close the server socket here - to stop
       // any other client sockets?
     }
+
+    override def messageReceived(session: IoSession, message: AnyRef): Unit = {
+      message match {
+        case Print(string) => out.print(string)
+        case _ =>
+      }
+    }
   }
 }

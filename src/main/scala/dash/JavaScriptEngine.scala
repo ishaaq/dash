@@ -107,9 +107,9 @@ trait JavaScriptEngine extends ScriptEngine {
       }
       try {
           runEval(evalString(__desc__ + "('" + descArgs + "')"), false)
-          Right(out.getAndReset)
+          None
       } catch {
-        case e => Left("An error occurred: " + e.getMessage)
+        case e => Some("An error occurred: " + e.getMessage)
       }
     }
 }

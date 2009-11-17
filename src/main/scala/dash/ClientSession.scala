@@ -7,8 +7,8 @@ abstract class ClientSession(val dashHome: String, val out: RemoteWriter, val st
     private def tryEval(reqId: UUID, eval: => AnyRef): Message = {
       try {
           eval match {
-            case null => new Success(reqId, out.getAndReset, null)
-            case resp => new Success(reqId, out.getAndReset, resp.toString)
+            case null => new Success(reqId, null)
+            case resp => new Success(reqId, resp.toString)
           }
       } catch {
         case err => {

@@ -76,9 +76,9 @@ trait RhinoScriptEngine extends ScriptEngine {
       }
       try {
           rhinoSession.run(__desc__ + "('" + descArgs + "')")
-          Right(out.getAndReset)
+          None
       } catch {
-        case e => Left("An error occurred: " + e.getMessage)
+        case e => Some("An error occurred: " + e.getMessage)
       }
     }
 }
