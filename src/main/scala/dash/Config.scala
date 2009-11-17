@@ -26,7 +26,7 @@ object Config {
   val requestTimeout = 2000L
   def scriptDir(dashHome: String) = new File(dashHome, "scripts")
 
-  val version = "v0.1"
+  val version = "v0.0.1"
 
   val localHost = getByName("127.0.0.1")
 
