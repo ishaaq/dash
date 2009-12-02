@@ -1,0 +1,2 @@
+Place your custom Javascript script files in this directory. You can load them from within dash using its inbuilt 'load' function.
+Run ':desc load' inside dash for a full explanation.
