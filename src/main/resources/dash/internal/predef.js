@@ -3,7 +3,7 @@
 // a temporary array containing all the functions we want the
 // end user to be able to enumerate. After loading them the
 // array will be removed from scope
-enumerate = [ "load", "out", "print", "println", "typeOf" ];
+enumerate = [ "load", "out", "print", "println", "reflect", "typeOf" ];
 
 function load() {
     var scriptFile = arguments[0];
@@ -57,6 +57,63 @@ function println(str) {
 println.help = "Usage: {{bold:println(string):}}\n" +
 "Prints the {{bold:string:}} and a newline char. The printing is done on\n" +
 "the client console using dash's {{bold:RemoteWriter:}} implementation.\n";
+
+function reflect(obj, str) {
+    with(JavaImporter(Packages.dash.internal)) {
+        var wrap = function(ref) {
+            if (ref instanceof MethodRef) {
+                var func = function() {
+                    var args = java.lang.reflect.Array.newInstance(java.lang.Object, arguments.length);
+                    for (var i = 0; i < arguments.length; i++) {
+                        args[i] = arguments[i];
+                    }
+                    return ref.invoke(args);
+                }
+                func.help = "A reflected method reference implemented as a JS function.\n" +
+                   "--------------------------------------------------------\n" + ref.help();
+                return func;
+            } else if (ref instanceof FieldRef) {
+                var field = function() {
+                    if (arguments.length == 1) {
+                        ref.set(arguments[0]);
+                    } else {
+                        return ref.get();
+                    }
+                };
+                field.help = "A reflected field reference implemented as a JS function.\n" +
+                    "Call the function with no arguments to get the value and with one argument\n" +
+                    "of the right type to set the field's value.\n" +
+                    "--------------------------------------------------------\n" + ref.help();
+
+
+                return field;
+            } else if (ref instanceof ReflectionRefs) {
+                // we've got a ReflectionRefs instance, we'll have to wrap each individual
+                // ref and return an array:
+                var arr = new Array();
+                var refs = ref.invoke();
+                for (i in refs) {
+                    arr.push(wrap(refs[i]));
+                }
+                arr.help = "An array of reflected references.\n" +
+                    "--------------------------------------------------------\n" + ref.help();
+                return arr;
+            }
+        };
+
+        var ref = ReflectionHelper.reflect(obj, str);
+        var jsRef = wrap(ref);
+        return jsRef;
+    }   
+}
+reflect.help = "Usage {{bold:reflect(obj, string):}}\n" +
+    "Use reflection to reflect fields or methods from the input obj.\n" +
+    "Returns one of the following:\n" +
+    "    a field reference\n" +
+    "    a method reference\n" +
+    "    an array of references - usually when there are multiple methods/fields matching the string.\n" +
+    "Note that you can use the {{bold: desc: :}} command on returned references for further help.";
+
 
 function __desc__() {
     var describe = function(name, verbose) {
