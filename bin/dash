@@ -1,4 +1,5 @@
 #!/bin/bash
-DIR=`dirname $0`
-DASH_HOME=`readlink -fn $DIR`
+pushd `dirname $0` > /dev/null
+DASH_HOME=`pwd`
+popd > /dev/null
 java -Xmx512M -Ddash.home=$DASH_HOME -jar dash.jar $@
