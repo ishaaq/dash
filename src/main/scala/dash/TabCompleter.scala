@@ -19,7 +19,7 @@ trait TabCompleter {
 }
 
 object CommandTabCompleter extends TabCompleter {
-    private val commands: Set[String] = Set() ++ List.flatten(Help.helpList.map(_.aliases)).map(":" + _ + " ")
+    private val commands: Set[String] = Set() ++ Help.helpList.map(_.aliases).flatten.map(":" + _ + " ")
     def getCompletions(buffer: String, cursor: Int) = (commands.filter(_.startsWith(buffer)).toArray, 0)
 }
 

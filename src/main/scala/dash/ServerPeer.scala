@@ -70,7 +70,7 @@ class ServerPeer(start: => Unit, out: => Printer) {
                               def run = {
                                 if(!session.isConnected) {
                                     out.println(red("Lost connection! Shutting down..."))
-                                    exit(1)
+                                    sys.exit(1)
                                 }
                               }
                             }, requestTimeout, requestTimeout, TimeUnit.MILLISECONDS)

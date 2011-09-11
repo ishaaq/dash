@@ -56,7 +56,7 @@ class RemoteWriter(server: Server) extends Writer {
        }
     }
 
-    def write(chars: Array[Char], offset: Int, length: Int) = sb.append(chars, offset, length)
+    def write(chars: Array[Char], offset: Int, length: Int) = sb.appendAll(chars, offset, length)
 
     def print(str: String) = client ! Print(str)
     def println(str: String) = client ! Print(str + "\n")

@@ -7,7 +7,7 @@ import Config._
  * The dash Client and Server instances communicate via message-passing. All messages
  * implement this trait.
  */
-sealed trait Message
+sealed trait Message extends Serializable
 
 
 import org.apache.mina.filter.reqres.{Request => MRequest}
@@ -20,7 +20,7 @@ class Request(req: ResponseRequired) extends MRequest(req.id, req, 0) {
   val id = getId.asInstanceOf[UUID]
 }
 
-sealed abstract case class Req() extends Message
+sealed abstract class Req() extends Message
 
 trait ResponseRequired extends Req {
   val id = UUID.randomUUID
@@ -30,7 +30,7 @@ case class TabCompletionRequest(prefix: String, cursor: Int) extends ResponseReq
 case class Run(filePath: String, args: Array[String]) extends ResponseRequired
 case class Eval(command: String) extends ResponseRequired
 
-sealed abstract case class Command(val aliases: List[String]) extends Req {
+sealed abstract class Command(val aliases: List[String]) extends Req {
   def this(alias: String) = this(List(alias))
   def run(client: Client): Unit = client.out.println(red("Not implemented yet!"))
   def help: String = red("Not implemented yet!")
@@ -38,7 +38,7 @@ sealed abstract case class Command(val aliases: List[String]) extends Req {
 
 object Help {
   val helpList = List[Command](new Help(""), new Desc(), Reset, Quit)
-  val helpMap: Map[String, Command] = Map[String, Command]() ++ List.flatten(for(cmd <- helpList) yield cmd.aliases.map((_, cmd)))
+  val helpMap: Map[String, Command] = Map[String, Command]() ++ (for(cmd <- helpList) yield cmd.aliases.map((_, cmd))).flatten
 }
 
 case class Help(command: String) extends Command("help") {
@@ -101,12 +101,11 @@ case object Noop extends Command("") {
 }
 
 case object Quit extends Command(List("exit", "quit")) {
-  override def run(client: Client) = exit
+  override def run(client: Client) = sys.exit
   override def help = "Shuts down the dash client. You can also shut down by pressing {{bold:<CNTRL-C>:}} or {{bold:<CNTRL-D>:}}."
 }
 
-@serializable
-sealed abstract case class Resp(val reqId: UUID) extends Message
+sealed abstract class Resp(val reqId: UUID) extends Message
 case class TabCompletionList(id: UUID, list: List[String]) extends Resp(id)
 case class Success(id: UUID, response: String) extends Resp(id)
 case class Error(id: UUID, errorClass: String, message: String, stack: String) extends Resp(id)

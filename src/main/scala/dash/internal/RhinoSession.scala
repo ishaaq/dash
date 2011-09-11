@@ -3,7 +3,8 @@ package dash.internal
 import sun.org.mozilla.javascript.internal.{ScriptableObject, Context, Undefined, ImporterTopLevel, NativeArray, NativeFunction, NativeJavaObject, JavaScriptException, LazilyLoadedCtor}
 import sun.org.mozilla.javascript.internal.ScriptableObject.{DONTENUM, PERMANENT, READONLY}
 import java.io.{Reader, InputStreamReader}
-import ARM._
+import dash._
+import dash.ARM._
 import RhinoScopeWrapper._
 
 /**
@@ -29,7 +30,7 @@ class RhinoSession(engine: RhinoScriptEngine, out: RemoteWriter, stdinName: Stri
         }
         val enumerateProp = "enumerate"
         val enumerate = getProperty(enumerateProp)
-        val enumerateableProps = enumerate.asInstanceOf[NativeArray]
+        val enumerateableProps = nativeArr2StringArr(enumerate.asInstanceOf[NativeArray])
         deleteProperty(enumerateProp)
         (getPropertyIds ++ List("importClass", "importPackage")).foreach { prop =>
           scope.setAttributes(prop, if(enumerateableProps.contains(prop)) const else hiddenConst)
@@ -83,7 +84,7 @@ class RhinoSession(engine: RhinoScriptEngine, out: RemoteWriter, stdinName: Stri
       val propIds = (for(propId <- ScriptableObject.getPropertyIds(obj)
           if(propId.isInstanceOf[String])
       ) yield propId.toString).toList
-      propIds.sort((x, y) => x.toLowerCase < y.toLowerCase)
+      propIds.sortWith((x, y) => x.toLowerCase < y.toLowerCase)
     }
     def getPropertyIds: List[String] = getPropertyIds(scope)
 

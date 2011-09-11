@@ -5,8 +5,8 @@ import java.util.UUID
 import java.io.FileReader
 import Config._
 import javax.script.{ScriptEngineManager, ScriptContext}
-import scala.collection.jcl.Conversions.convertSet
 import scala.io.Source
+import scala.collection.JavaConversions._
 import _root_.sun.org.mozilla.javascript.internal.NativeArray
 
 /**

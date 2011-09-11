@@ -3,6 +3,7 @@ package dash.internal
 import java.util.UUID
 import java.io.FileReader
 import RhinoScopeWrapper._
+import dash.{ScriptEngine, ClientSession, TabCompletionList}
 import sun.org.mozilla.javascript.internal.{NativeArray, ScriptableObject, NativeJavaObject}
 
 /**
@@ -42,7 +43,7 @@ trait RhinoScriptEngine extends ScriptEngine {
           } catch {
             case e => Nil
           }
-          possibleCompletions.filter(_.startsWith(partial)).sort(_ < _).map(objStr + '.' + _)
+          possibleCompletions.filter(_.startsWith(partial)).sortWith(_ < _).map(objStr + '.' + _)
         }
       }
 

@@ -18,6 +18,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     }
 
     override def compileClasspath = super.compileClasspath +++ toolsJar
+    override def compileOptions = super.compileOptions ++ Seq(Deprecation)
 
     val jline = "jline" % "jline" % "0.9.93" intransitive
     val args4j = "args4j" % "args4j" % "2.0.16" intransitive

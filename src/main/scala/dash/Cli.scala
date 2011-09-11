@@ -57,7 +57,7 @@ object Cli {
         out.println("Options:")
 
         parser.printUsage(out)
-        exit(status)
+        sys.exit(status)
     }
 
 }
@@ -68,13 +68,13 @@ object Args {
     var args = Array[String]()
     var help = false
 
-    @Opt{val name = "-f", val usage = "The script file to run" }
+    @Opt(name = "-f", usage = "The script file to run")
     def setFile(file: File) = this.file = Some(file)
 
-    @Opt{val name = "-p", val metaVar = "pid", val usage = "The process-id of the Java app to attach to" }
+    @Opt(name = "-p", metaVar = "pid", usage = "The process-id of the Java app to attach to")
     def setPid(pid: String) = this.pid = Some(pid)
 
-    @Opt{val name = "-h", val usage = "Print this usage help"}
+    @Opt(name = "-h", usage = "Print this usage help")
     def setHelp(help: Boolean) = this.help = true
 
     @Argument

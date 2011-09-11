@@ -1,11 +1,11 @@
 package dash
 
 import java.io.File
+import java.lang.management.ManagementFactory
+import java.net.ServerSocket
 import java.util.UUID
 import com.sun.tools.attach.VirtualMachine
-import collection.jcl.Conversions.convertList
-import java.net.ServerSocket
-import java.lang.management.ManagementFactory
+import scala.collection.JavaConversions._
 import Config._
 
 /**
@@ -23,7 +23,7 @@ class Attacher(pid: Option[String], file: Option[File], args: Array[String]) {
           attachVm(pid) match {
             case Left(errorMessage) => {
               if(errorMessage != null) error(errorMessage)
-              exit(1)
+              sys.exit(1)
             }
             case Right(vm) => {
               val stdinName = file match {
@@ -37,7 +37,7 @@ class Attacher(pid: Option[String], file: Option[File], args: Array[String]) {
       } catch {
         case ex => {
           error(ex.getClass.getSimpleName + ": " + ex.getMessage)
-          exit(1)
+          sys.exit(1)
         }
       }
     }

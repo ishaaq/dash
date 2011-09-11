@@ -86,7 +86,7 @@ class InteractiveMessageFactoryImpl(server: ServerPeer) extends MessageFactory w
         val list = candidateList.asInstanceOf[JList[String]]
         if(buffer.trim.length > 0) {
             val completions: Option[(Array[String], Int)] = (for {
-              tabCompleter <- tabCompleters.elements
+              tabCompleter <- tabCompleters.iterator
               (completions, offset) = tabCompleter.getCompletions(buffer, cursor)
             } yield (completions, offset)).find(x => { x._1.size > 0 })
             completions match {

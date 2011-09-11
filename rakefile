@@ -3,10 +3,11 @@
 PWD = Dir.pwd
 PROJ = "#{PWD}/project"
 TOOLS = "#{PROJ}/tools"
-SBT = "java -Xmx512M -jar #{TOOLS}/sbt-launcher-0.5.5.jar"
+SBT = "java -Xmx512M -jar #{TOOLS}/sbt-launch-0.7.7.jar"
 BUILD_PROPERTIES = "#{PROJ}/build.properties"
 TARGET = "#{PWD}/target"
-SCALA_LIB = "#{PROJ}/boot/scala-2.7.5/lib/scala-library.jar"
+SCALA_VERSION = "2.9.1"
+SCALA_LIB = "#{PROJ}/boot/scala-#{SCALA_VERSION}/lib/scala-library.jar"
 TAR_BUILD = "#{TARGET}/tarbuild"
 
 desc 'runs a full build - clean, package, tarball'
@@ -26,7 +27,7 @@ end
 
 task :tarball do
     version = load_properties("#{PROJ}/build.properties")['project.version']
-    origDashJar = "#{TARGET}/dash-#{version}.jar"
+    origDashJar = "#{TARGET}/scala_#{SCALA_VERSION}/dash_#{SCALA_VERSION}-#{version}.jar"
     dashJar = "#{TARGET}/dash.jar"
     jarTmp = "#{TARGET}/jarTmp"
 
@@ -34,7 +35,7 @@ task :tarball do
 
     mkdir_p jarTmp
 
-    jarLocations = Dir.glob("#{PWD}/lib_managed/compile/*.jar") + [SCALA_LIB, origDashJar]
+    jarLocations = Dir.glob("#{PWD}/lib_managed/scala_#{SCALA_VERSION}/compile/*.jar") + [SCALA_LIB, origDashJar]
     jarLocations.each { |jar|
         sh "unzip -q -o #{jar} -d #{jarTmp}"
     }

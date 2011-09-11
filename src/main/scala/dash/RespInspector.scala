@@ -9,7 +9,7 @@ class RespInspector extends ResponseInspector {
         println("inspecting response: " + resp)
       }
       resp match {
-        case Resp(reqId) => reqId
+        case resp: Resp => resp.reqId
         case _ => null
       }
     }

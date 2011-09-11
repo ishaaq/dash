@@ -38,7 +38,7 @@ object FormattedStringParser extends RegexParsers {
             if(substring.length == 0) {
                 return  Failure("Expected non-empty string", in)
             }
-            val indxs = formatCodes.map(fmt => substring.indexOf(fmt)).filter(_ != -1).sort((i,j) => i < j)
+            val indxs = formatCodes.map(fmt => substring.indexOf(fmt)).filter(_ != -1).sortWith((i,j) => i < j)
             val matchString = indxs match {
               case Nil => substring
               case x::xs => substring.substring(0, x)
@@ -55,7 +55,7 @@ object FormattedStringParser extends RegexParsers {
     /**
      * just for testing - should really move this to scalacheck or some such...
      */
-    def main(args: Array[String]): Unit = {
+    /*def main(args: Array[String]): Unit = {
             val testStrings = List(
               new FormattedString("asdf"),
               new FormattedString("a{{red:b:}}c"),
@@ -67,5 +67,5 @@ object FormattedStringParser extends RegexParsers {
               println("unformatted: " + string.getString(false))
               println("formatted: " + string.getString(true))
             }
-    }
+    }*/
 }
