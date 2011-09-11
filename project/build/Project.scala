@@ -22,7 +22,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
     val jline = "jline" % "jline" % "0.9.93" intransitive
     val args4j = "args4j" % "args4j" % "2.0.16" intransitive
-    val mina = "org.apache.mina" % "mina-core" % "2.0.0-RC1" intransitive
+    val mina = "org.apache.mina" % "mina-core" % "2.0.4" intransitive
     val slf4j = "org.slf4j" % "slf4j-api" % "1.5.8" intransitive
     val slf4j_jdk14 = "org.slf4j" % "slf4j-jdk14" % "1.5.8" intransitive
 }
