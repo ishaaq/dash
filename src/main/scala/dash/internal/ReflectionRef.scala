@@ -14,9 +14,9 @@ final case class MethodRef(obj: AnyRef, method: Method) extends ReflectionRef {
       .append('(').append(method.getParameterTypes.map(_.getName).mkString(", ")).append(')')
       .toString
 
-  def invoke(params: Array[Any]) = params.length match {
+  def invoke(params: Array[Object]) = params.length match {
     case 0 => method.invoke(obj)
-    case _ => method.invoke(obj, params)
+    case _ => method.invoke(obj, params: _*)
   }
 }
 
