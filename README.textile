@@ -1,0 +1,167 @@
+h1. Summary
+
+dash - the <b>D</b>ynamically <b>A</b>ttaching <b>SH</b>ell
+
+h2. What is it?
+
+dash is the second non-trivial app I have written in my quest to learn Scala.
+
+It is a console application that can attach to any running Java application and allow the user to run arbitrary Javascript code on it.
+
+h2. Huh?? Why?
+
+The ability to run arbitrary code dynamically on a running app is very powerful. You can run diagnostics or even modify existing functionality of an existing running application without needing to recompile it or, for that matter, even having to shut it down and restart it.
+
+h2. How does one run dash?
+
+# Build/Download the dash tarball and untar it.
+# Run the dash script. (Use the -h option to see the available options).
+# Choose the Java app to attach to
+# Hack away at it....
+
+h2. I'm confused, this is all abstract - show me an example run.
+
+<pre>
+    $ ./dash
+    [1] 96686 scala.tools.nsc.MainGenericRunner
+    [2] 96883 sun.tools.jconsole.JConsole
+    Choose a JVM number to attach to [1 - 2] : 1
+    dash (v0.2.0): the Dynamically Attaching SHell
+    ==============================================
+    For help type :help at the prompt.
+    dash> println("hello dash world!")
+    hello dash world!
+    >> undefined
+
+    dash> 1+1
+    >> 2
+</pre>
+
+h2. Meh! What's so special about that last example?
+
+The evaluations of the lines @println("hello dash world")@ and @1+1@ were actually run on the remote JVM that dash attached itself to, not on dash's own JVM. The results of the computations were then sent back to the dash client so that it could print them out on its console.
+
+h2. So you can print lines and evaluate simple arithmetic. Double-meh!
+
+You can definitely do more complex things - you can call arbitrary java code, implement new interfaces/classes etc. See the "JavaScript Script Engine doco":http://java.sun.com/javase/6/docs/technotes/guides/scripting/programmer_guide/index.html#jsengine for details. The "Rhino documentation":https://developer.mozilla.org/en/Scripting_Java is also helpful but be aware that there are incompatibilities in the Rhino version shipped with the JVM.
+
+h2. What's with all this @>> undefined@ stuff?
+
+The @>>@ indicates that the rest of the line contains the result retrieved from the previous computation. Quite often the previous computation has no result, i.e., in Java-speak the result is void (for e.g. when you run a @println()@ call, or a @load()@ call). In such cases, dash will return the @undefined@ value.
+
+h2. Is it possible to refer to or manipulate private Java methods/fields?
+
+Yes! The example below retrieves the internal array in a java.lang.String and replaces it with another and finally prints the hacked string.
+<pre><code>dash> var hello = "hello"
+dash> var arr = reflect("world", "value")()  // get the internal value array field from a String object:
+dash> reflect(hello, "value")(arr) // reset the internal value to something else (yes, really!!!)
+dash> println(hello)
+world</code></pre>
+
+You can similarly call private methods in this form:
+@reflect(object, "methodName")(<args>)@ - where @<args>@ is zero or more arguments as required by the method.
+
+In general, when working with fields:
+@reflect(object, "fieldname")()@ - returns the field value.
+@reflect(object, "fieldname")(value)@ - resets the field value.
+
+When working with methods:
+@reflect(object, "methodname")(<args>)@ - calls a method with the requisite number of arguments.
+
+Finally, you can also work with static fields and methods:
+@reflectStatic(<fully-qualified-Java-className>, "field/methodname")(<args>)@ - equivalent of the above for static fields/methods.
+
+h4. Name overloads
+
+Sometime the name string passed in to the @reflect/reflectStatic@ call corresponds to multiple overloads - i.e. field/methods sharing the same name, in this case @reflect/reflectStatic@ returns an array instead of a function:
+<pre><code>dash> var result = reflect(javaArrayList, "size")
+dash> :desc result
+result  : array
+An array of reflected references.
+--------------------------------------------------------
+[0] java.util.ArrayList.size = 10 (int)
+[1] int java.util.ArrayList.size()
+[2] int java.util.AbstractCollection.size()
+dash> result [0]()
+>>10</code></pre>
+
+h2. Help! I've run a command that overwrote some of dash's core Javascript functions! Now what do I do?
+
+You probably have not. Most of the core functions that dash provides cannot be overwritten:
+<pre><code>dash> var str = 'I should not be replacing the println function with a string!'
+>> undefined
+dash> typeOf(str)
+>> string
+dash> typeOf(println)
+>> function
+dash> println=str
+>> I should not be replacing the println function with a string!
+dash> typeOf(str)
+>> string
+dash> typeOf(println)
+>> function</code></pre>
+However, there are a couple of functions/variables where it is still possible to put yourself in a hole, alternatively, you might overwrite a function/variable that was declared in one of the scripts you loaded. If the latter is the case then you can simply undo this be reloading the script. Alternatively simply use the @:reset@ command to set the dash console back to a clean slate - all variables and functions you declared in the session will be reset.
+
+h2. Can you attach multiple dash clients to the same application?
+
+Yes, you can. They will run independently of each other. Note however, that you may see bizarre errors if the dash clients are differing versions. Rule of thumb: once a particular version of dash has been attached to an application, avoid attaching a different version of dash to the same application for its lifetime. See the limitations section below for the reason why.
+
+h2. Can you list some of dash's features?
+
+Sure. dash:
+# can run in interpreted shell mode.
+# can run in automated scripted mode.
+# supports tab-completion in interpreted mode.
+# has integrated help.
+# extends the help system to allow advanced dash-script writers to write help doco for their scripts.
+# supports ad-hoc multi-line scripts on the console.
+# supports colour coding on ANSI-code capable consoles - useful if scripts need to emphasise some parts of their output.
+# exposes the ability to allow you to load external scripts from your console and even from your external scripts - i.e. you can create a complex Javascript module eco-system that you can use to add your custom scripts to.
+# has history recall - use your up/down arrow keys to traverse it.
+
+h2. Ok, but why Javascript? Why not some cooler JVM language like JRuby or Groovy?
+
+In short: ease of use and interoperability with Java.
+
+JRuby, while great for running Ruby scripts is a bit of a pain to embed inside a Java app and get it to interoperate seamlessly with Java code.
+
+Groovy does not have this problem, but has its own problems with classloaders and compilation phases.
+
+This is not to say this is not possible, I do in fact have rudimentary versions of dash that run with JRuby and Groovy and if you wish you could modify it to run with your favourite JVM language instead - you should only have to implement a few classes to get it working. Be prepared to do some serious hacking with the internals of the engines for those languages though.
+
+h2. Ye-es, but still, Javascript? Come on dude!
+
+Javascript the language is actually pretty cool, much maligned due to its association with the DOM and browser compatibility hell. If you take the time to study it as a language then you'll come to appreciate it. Nevertheless - if you ignore all its subtle features, at the surface it is a very simple language to learn, ideal for writing simple dash scripts.
+
+Besides, the most compelling reason to use Javascript? Its "built into Java 1.6":http://java.sun.com/javase/6/docs/technotes/guides/scripting/index.html.
+
+h2. It can't all be rosy - what are dash's limitations?
+
+# It can only attach to Sun JVMs greater than or equal to v1.6.
+# dash attaches to the system classloader of the target application. What this means is that once dash classes have been loaded into the app, newer versions of dash classes cannot be reloaded.
+# The above limitation is actually pretty serious - specially considering dash's dependencies, this means that, currently it is not possible to run dash on an app which has clashing versions of dash's dependencies already in its classpath. I am working on strategies to remediate this problem.
+# While dash has been tested on Linux and Mac, it is unconfirmed as to whether it supports any other platform.
+# If the target app is implemented with non-standard classloader hackery then it is likely that dash will have problems attaching to it. Having said that, if you do find such scenarios please let me know and I will try and search for workarounds.
+
+h2. What about security? Surely dash violates all kinds of security principles?
+
+You can only attach to an app that you started - i.e. standard OS permissions on the application's process apply.
+
+Communication between dash and the target app is done via a TCP connection using a randomly chosen port in the ephemeral range. A bit counter-intuitively, the server socket is opened on the dash client, not the target app's JVM. This ensures that if the socket itself is subject to a security attack it only puts the dash client in danger, not the target app. Additionally, the socket is bound only on localhost, i.e., you cannot open a connection to it remotely.
+
+h2. What about overheads? Surely dash is detrimental to the performance of a production app?
+
+At its core dash is lightweight in terms of memory and CPU performance. Additionally, once you shut down your dash client, and the GC has had a chance to mop up the application you attached to, you should find that there is no memory/cpu usage delta between before and after running dash.
+
+Having said that, while dash is running, if your custom dash scripts do CPU intensive things, or if they leave static references hanging around, then, they might have an impact on the application long after the client shuts down
+
+There is one small caveat though - dash attaches to the target JVM using "Java 1.6's Attach API":http://java.sun.com/javase/6/docs/technotes/guides/attach/index.html. The attach api, once invoked will start a new _Attach Listener_ thread, this thread, once started remains running for the lifetime of the app, long after the dash client logs off. However, having said that, this thread is not CPU intensive and you have the same effect after running other clients that use the Attach API - Sun's own JConsole and VisualVM being examples of this.
+
+h2. dash is dangerous! What's stopping me from making a @System.exit()@ call from inside a dash script?
+
+Nothing.
+
+h2. What a stupid name!
+
+Sigh! I know. I've spent ages trying to come up with a better name. Am open to suggestions.
+
