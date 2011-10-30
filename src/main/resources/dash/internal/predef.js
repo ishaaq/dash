@@ -58,7 +58,8 @@ println.help = "Usage: {{bold:println(string):}}\n" +
 "Prints the {{bold:string:}} and a newline char. The printing is done on\n" +
 "the client console using dash's {{bold:RemoteWriter:}} implementation.\n";
 
-function reflect(obj, str) {
+// a temporary object to setup the reflection functions
+var tmpReflect = function(isStatic) {
     with(JavaImporter(Packages.dash.internal)) {
         var wrap = function(ref) {
             if (ref instanceof MethodRef) {
@@ -84,8 +85,6 @@ function reflect(obj, str) {
                     "Call the function with no arguments to get the value and with one argument\n" +
                     "of the right type to set the field's value.\n" +
                     "--------------------------------------------------------\n" + ref.help();
-
-
                 return field;
             } else if (ref instanceof ReflectionRefs) {
                 // we've got a ReflectionRefs instance, we'll have to wrap each individual
@@ -100,12 +99,14 @@ function reflect(obj, str) {
                 return arr;
             }
         };
-
-        var ref = ReflectionHelper.reflect(obj, str);
-        var jsRef = wrap(ref);
-        return jsRef;
-    }   
+        return function(obj, str) {
+            var ref = isStatic ? ReflectionHelper.reflectStatic(obj, str) : ReflectionHelper.reflect(obj, str);
+            return wrap(ref);
+        }
+    }
 }
+
+var reflect = tmpReflect(false);
 reflect.help = "Usage {{bold:reflect(obj, string):}}\n" +
     "Use reflection to reflect fields or methods from the input obj.\n" +
     "Returns one of the following:\n" +
@@ -114,6 +115,15 @@ reflect.help = "Usage {{bold:reflect(obj, string):}}\n" +
     "    an array of references - usually when there are multiple methods/fields matching the string.\n" +
     "Note that you can use the {{bold: desc: :}} command on returned references for further help.";
 
+var reflectStatic = tmpReflect(true);
+reflectStatic.help = "Usage {{bold:reflectStatic(className, string):}}\n" +
+    "Use reflection to reflect static fields or methods from the input fully-qualified classname.\n" +
+    "Returns one of the following:\n" +
+    "    a field reference\n" +
+    "    a method reference\n" +
+    "    an array of references - usually when there are multiple methods/fields matching the string.\n" +
+    "Note that you can use the {{bold: desc: :}} command on returned references for further help.";
+tmpReflect=undefined;
 
 function __desc__() {
     var describe = function(name, verbose) {

@@ -16,6 +16,19 @@ object ReflectionHelper {
     }
   }
 
+  def reflectStatic(className: String, property: String): ReflectionRef = {
+    val clazz = Class.forName(className)
+    val fieldRefs = findFields(clazz, property).map(FieldRef(null, _))
+    val methodRefs = findMethods(clazz, property).map(MethodRef(null, _))
+
+    (fieldRefs.size, methodRefs.size) match {
+      case (0, 0) => throw new Exception("Cannot resolve ref: " + property)
+      case (1, 0) => fieldRefs(0)
+      case (0, 1) => methodRefs(0)
+      case _ => ReflectionRefs(null, (fieldRefs ++ methodRefs).toArray)
+    }
+  }
+
   private def findMethods(clazz: Class[_], methodName: String): List[Method] =
       findX(clazz, {_.getDeclaredMethods}, {method: Method => method.getName == methodName})
 
