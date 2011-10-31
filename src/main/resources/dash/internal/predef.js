@@ -91,7 +91,7 @@ var tmpReflect = function(isStatic) {
                 // ref and return an array:
                 var arr = new Array();
                 var refs = ref.invoke();
-                for (i in refs) {
+                for (var i in refs) {
                     arr.push(wrap(refs[i]));
                 }
                 arr.help = "An array of reflected references.\n" +
