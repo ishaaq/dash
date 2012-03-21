@@ -6,8 +6,6 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
     override def packageOptions =  ManifestAttributes(("Agent-Class", "dash.Agent")) :: super.packageOptions.toList
 
-    val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
-
     def toolsJar = {
       // java.home may point to the jre home, we want the jvm home to get to tools.jar
       // to be safe we resolve both locations...

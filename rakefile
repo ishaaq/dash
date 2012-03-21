@@ -6,7 +6,7 @@ TOOLS = "#{PROJ}/tools"
 SBT = "java -Xmx512M -jar #{TOOLS}/sbt-launch-0.7.7.jar"
 BUILD_PROPERTIES = "#{PROJ}/build.properties"
 TARGET = "#{PWD}/target"
-SCALA_VERSION = "2.9.1"
+SCALA_VERSION = "2.9.1-1"
 SCALA_LIB = "#{PROJ}/boot/scala-#{SCALA_VERSION}/lib/scala-library.jar"
 TAR_BUILD = "#{TARGET}/tarbuild"
 
