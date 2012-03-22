@@ -5,7 +5,9 @@ import jline.ANSIBuffer.ANSICodes.attrib
 /**
  * ANSI-code formatted strings.
  */
-class FormattedString(val rawString: String) {
+class FString(val rawString: String) {
+    def formatted = getString(true)
+    def unformatted = getString(false)
     def getString(useFormatting: Boolean): String = {
       val controlSeq = FormattedStringParser.parse(rawString).get
       val s = (new StringBuilder() /: controlSeq) { (s, x) =>
@@ -19,6 +21,10 @@ class FormattedString(val rawString: String) {
     }
 
     override def toString = rawString
+}
+
+object FString {
+  def apply(string: String) = new FString(string)
 }
 
 sealed trait FormattedStringPart

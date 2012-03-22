@@ -7,8 +7,5 @@ Stuff I'd like to do to enhance dash (in no particular order) along with broad c
   be run on Server, for e.g. System.exit(). However we need to be careful not to affect the security model of the
   original code in the app. (HARD)
 
-- Investigate how to get MINA to unbind the server socket after client and server connect - so that no other app can
-  then communicate with dash. (MEDIUM)
-
 - Use something like jarjar to rename dash's deps so we don't have classloader clashes when the app being attached
   to already has differing versions of the deps (MEDIUM)

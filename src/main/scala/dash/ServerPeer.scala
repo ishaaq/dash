@@ -7,16 +7,18 @@ import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactor
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor
 import org.apache.mina.core.session.IoSession
 import org.apache.mina.filter.reqres.RequestResponseFilter
-import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import org.apache.mina.transport.socket.nio.NioProcessor
+import org.apache.mina.core.service.SimpleIoProcessorPool
 
 /**
  * The Client's peer connection to the Server.
  */
-class ServerPeer(start: => Unit, out: => Printer) {
+class ServerPeer(start: => Unit, client: Client) {
   private var session: IoSession = _
-  private val executor = new ScheduledThreadPoolExecutor(5)
-  lazy val acceptor = {
-      val acc = new NioSocketAcceptor
+  private val executor = new ScheduledThreadPoolExecutor(5, DaemonThreadFactory)
+  private lazy val acceptor = {
+      val acc = new NioSocketAcceptor(executor, new SimpleIoProcessorPool(classOf[NioProcessor], executor))
       val chain = acc.getFilterChain
       chain.addLast("codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()))
       if(logging) {
@@ -24,6 +26,7 @@ class ServerPeer(start: => Unit, out: => Printer) {
       }
       chain.addLast("reqresp", new RequestResponseFilter(new RespInspector, executor))
       acc.setHandler(new ClientSessionHandler)
+      acc.setCloseOnDeactivation(false) // for security reasons we will unbind the port as soon as one connection is made
       acc.bind(new InetSocketAddress(localHost, 0))
       acc
   }
@@ -38,12 +41,6 @@ class ServerPeer(start: => Unit, out: => Printer) {
       })
 
   /**
-   * Sends an asynchoronous request. Nothing returned - use
-   * this to 'fire and forget'.
-   */
-  def !(req: Req): Unit = !!(req)
-
-  /**
    * Sends a synchronous request, returns an option of a response.
    */
   def !?(req: ResponseRequired): Option[Resp] = {
@@ -54,34 +51,41 @@ class ServerPeer(start: => Unit, out: => Printer) {
     val resp = request.awaitResponse
     resp.getMessage match {
       case resp: Resp => Some(resp)
-      case x => { out.println(red("unexpected response: ") + x); None }
+      case x => { client.println(red("unexpected response: ") + x); None }
+    }
+  }
+
+  @volatile var halted = false
+  def shutdown: Unit = {
+    if (!halted) {
+      halted = true
+      if (session.isConnected) session.close(true)
+      executor.shutdownNow
     }
   }
 
   import org.apache.mina.core.service.IoHandlerAdapter
   class ClientSessionHandler extends IoHandlerAdapter {
     override def sessionOpened(ioSession: IoSession) = {
+      acceptor.unbind() // we've established a connection, no need to continue exposing a security hole by leaving the server port bound
       if(session == null) {
           session = ioSession
-          executor.execute(new Runnable {
-            def run = start
-          })
-          executor.scheduleWithFixedDelay(new Runnable{
-                              def run = {
-                                if(!session.isConnected) {
-                                    out.println(red("Lost connection! Shutting down..."))
-                                    sys.exit(1)
-                                }
-                              }
-                            }, requestTimeout, requestTimeout, TimeUnit.MILLISECONDS)
+          val thread = new Thread(new Runnable { def run = start}, "dashMainLoop") // we purposely don't use the executor here because we want a non-daemon thread for the main loop
+          thread.setDaemon(false)
+          thread.start()
       }
-      // TODO - perhaps close the server socket here - to stop
-      // any other client sockets?
+    }
+
+    override def sessionClosed(session: IoSession): Unit = {
+      if (!halted) {
+        client.serverAbort
+        shutdown
+      }
     }
 
     override def messageReceived(session: IoSession, message: AnyRef): Unit = {
       message match {
-        case Print(string) => out.print(string)
+        case Print(string) => client.print(string)
         case _ =>
       }
     }

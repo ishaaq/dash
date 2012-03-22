@@ -1,10 +1,6 @@
 package dash
 
 import java.io.File
-import java.lang.reflect.Method
-import java.net.{MalformedURLException, URL, URLClassLoader}
-import java.util.{List => JList}
-import java.security.{AccessController, PrivilegedActionException, PrivilegedExceptionAction}
 import org.kohsuke.args4j.{Option => Opt, CmdLineParser, Argument, CmdLineException}
 import org.kohsuke.args4j.spi.StringArrayOptionHandler
 
@@ -12,10 +8,6 @@ import org.kohsuke.args4j.spi.StringArrayOptionHandler
  * Main entry point.
  */
 object Cli {
-  private val systemLoader = ClassLoader.getSystemClassLoader().asInstanceOf[URLClassLoader]
-  private val method = classOf[URLClassLoader].getDeclaredMethod("addURL", classOf[URL])
-  method.setAccessible(true)
-
     def main(args: Array[String]) {
         CmdLineParser.registerHandler(classOf[Array[String]], classOf[StringArrayOptionHandler])
         val parser = new CmdLineParser(Args)
@@ -30,18 +22,15 @@ object Cli {
         if(Args.file != None && Args.pid == None) {
             throw new IllegalArgumentException("Cannot run in script mode without specifying a process id")
         }
-        AccessController.doPrivileged(
-            new PrivilegedExceptionAction[AnyRef]() {
-                override def run(): Object = {
-                    val javaHome = new File(System.getProperty("java.home"))
-                    val toolJar = new File(javaHome, "lib/tools.jar").toURI.toURL
-                    val toolJarInJvmHome = new File(javaHome, "../lib/tools.jar").toURI.toURL
-                    method.invoke(systemLoader, toolJar)
-                    method.invoke(systemLoader, toolJarInJvmHome)
-                }
-            }
-        )
-        new Attacher(Args.pid, Args.file, Args.args).attach
+        val client = Args.file match {
+          case None => new InteractiveClient
+          case Some(file) => new ScriptedClient(file, Args.args)
+        }
+
+        Attacher(Args.pid).attach(client, 1000).foreach { errorMessage =>
+          Console.err.println(errorMessage)
+          sys.exit(1)
+        }
     }
 
     def printUsageAndExit(parser: CmdLineParser): Unit = printUsageAndExit(parser, None)
@@ -59,7 +48,6 @@ object Cli {
         parser.printUsage(out)
         sys.exit(status)
     }
-
 }
 
 object Args {

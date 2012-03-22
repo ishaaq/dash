@@ -2,89 +2,82 @@ package dash
 
 import java.io.File
 import java.lang.management.ManagementFactory
-import java.net.ServerSocket
-import java.util.UUID
+import java.net.URLDecoder
 import com.sun.tools.attach.VirtualMachine
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import Config._
+import java.security.{AccessController, PrivilegedExceptionAction}
+import java.net.{URL, URLClassLoader}
+import com.sun.tools.attach.VirtualMachineDescriptor
 
 /**
  * Selects and attaches to a running JVM.
  */
-class Attacher(pid: Option[String], file: Option[File], args: Array[String]) {
-    val dashHome = System.getProperty(Config.dashHomeClientProperty)
-    val id = UUID.randomUUID
+class Attacher private (pid: Option[String]) {
+    val vm = getVM
 
     private def error(message: String) = System.err.println(message)
 
-    def attach = {
-      val client = new Client(id, file, args)
-      try {
-          attachVm(pid) match {
-            case Left(errorMessage) => {
-              if(errorMessage != null) error(errorMessage)
-              sys.exit(1)
-            }
-            case Right(vm) => {
-              val stdinName = file match {
-                case None => "<stdin>"
-                case Some(file) => file.getName
-              }
-              vm.loadAgent(dashHome + File.separator + "dash.jar", client.port.toString + "," + dashHome +"," + id + "," + stdinName)
-              vm.detach
-            }
-          }
-      } catch {
-        case ex => {
-          error(ex.getClass.getSimpleName + ": " + ex.getMessage)
-          sys.exit(1)
-        }
-      }
-    }
-
-    private def attachVm(pid: Option[String]): Either[String, VirtualMachine] = {
-      // Gets current app's pid - sucks to have to do it this way - if only Sun would fix
-      // http://bugs.sun.com/view_bug.do?bug_id=4244896 !!
-      val myPid = ManagementFactory.getRuntimeMXBean.getName.split('@')(0)
-      // remove dash from the list of vms, no point attaching to oneself!
-      val vms = VirtualMachine.list.toList.filter(_.id != myPid)
+    private def getVM: Either[String, VirtualMachine] = {
       pid match {
-        case Some(pid) => {
-          vms.find(_.id == pid) match {
-            case None => Left("'%s' is not a Java process id!".format(pid))
-            case Some(_) => Right(VirtualMachine.attach(pid))
-          }
-        }
+        case Some(pid) => Right(VirtualMachine.attach(pid))
         case None => {
+          val vms = VmUtil.getAttachableVms
           if(vms.size == 0) {
               Left("No running JVMs to attach to!")
           } else {
-              vms.zipWithIndex.foreach { case (vm, idx) =>
-                  println("[%s] %s %s".format(idx + 1, vm.id, vm.displayName))
-              }
+            vms.zipWithIndex.foreach {
+              case (vm, idx) =>
+                println("[%s] %s %s %s".format(idx + 1, vm.id, vm.mainClass, vm.vmArgs))
+            }
 
-              print("Choose a JVM number to attach to [1" + (if (vms.length == 1) "] : " else " - %s] : ".format(vms.length)))
-
-              readLine match {
-                case null => Left("")
-                case input => input.trim match {
-                  case "" => Left(null)
-                  case input => {
-                    try {
-                        input.toInt match {
-                          case invalidId if invalidId < 1 || invalidId > vms.length =>
-                            Left("Invalid JVM id: " + invalidId)
-                          case id => Right(VirtualMachine.attach(vms(id - 1).id))
-                        }
-                    } catch {
-                      case ex: NumberFormatException =>
-                        Left("Invalid JVM id: " + input)
+            readLine("Choose a JVM number to attach to [1" + (if (vms.length == 1) "] : " else " - %s] : ".format(vms.length))) match {
+              case null => Left("")
+              case input => input.trim match {
+                case "" => Left("")
+                case input => {
+                  try {
+                    input.toInt match {
+                      case invalidId if invalidId < 1 || invalidId > vms.length =>
+                        Left("Invalid JVM id: " + invalidId)
+                      case id => Right(VirtualMachine.attach(vms(id - 1).id))
                     }
+                  } catch {
+                    case ex: NumberFormatException =>
+                      Left("Invalid JVM id: " + input)
                   }
                 }
               }
+            }
           }
         }
       }
     }
+
+    def attach(client: Client, timeout: Long = 0, scriptPath: Option[String] = None): Option[String] = {
+      try {
+          vm match {
+            case Right(vm) => {
+              val dashJar = new File(URLDecoder.decode(getClass.getProtectionDomain.getCodeSource.getLocation.getPath, "UTF-8"))
+              if (dashJar.exists()) {
+                // scripts either lie under the Sys-prop-supplied 'dash.scripts' or under a 'scripts' subdir of the dash install dir:
+                val scriptsDir = scriptPath.getOrElse(Option(System.getProperty("dash.scripts")).getOrElse(new File(dashJar.getParentFile(), "scripts").getAbsolutePath()))
+                vm.loadAgent(dashJar.getAbsolutePath(), client.server.port.toString + "," + scriptsDir +"," + client.id + "," + client.name)
+                vm.detach
+                client.waitForConnection(timeout)
+                return None
+              } else {
+                return Some("Unable to locate dash.jar to attach to vm, '" + dashJar.getAbsolutePath() + "' is not a valid location.");
+              }
+            }
+            case error => return error.left.toOption
+          }
+      } catch {
+        case ex => return Some(ex.getClass.getSimpleName + ": " + ex.getMessage)
+      }
+    }
+}
+
+object Attacher {
+  def apply(pid: Option[String]) = new Attacher(pid)
 }

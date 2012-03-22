@@ -32,7 +32,7 @@ case class Eval(command: String) extends ResponseRequired
 
 sealed abstract class Command(val aliases: List[String]) extends Req {
   def this(alias: String) = this(List(alias))
-  def run(client: Client): Unit = client.out.println(red("Not implemented yet!"))
+  def run(client: Client): Unit = client.println(red("Not implemented yet!"))
   def help: String = red("Not implemented yet!")
 }
 
@@ -46,7 +46,7 @@ case class Help(command: String) extends Command("help") {
 
   override def run(client: Client) = {
     import Help.{helpList, helpMap}
-    val println = client.out.println _
+    val println = client.println _
     command match {
         case null => {
             println("""EITHER run valid javascript code (which will be executed on the remote app's JVM):
@@ -62,7 +62,7 @@ Where {{bold:<command>:}} is one of the following:""")
         case command => {
             helpMap.get(command) match {
               case Some(command) => println(command.help)
-              case None => client.out.println(red("No such command: ") + command)
+              case None => client.println(red("No such command: ") + command)
             }
         }
      }
@@ -74,7 +74,7 @@ Where {{bold:<command>:}} is one of the following:""")
 }
 
 case object Reset extends Command("reset") {
-  override def run(client: Client) = client.server ! this
+  override def run(client: Client) = client.server !! this
   override val help = "Resets the session. All existing javascript vars and functions in the session will be cleared."
 }
 
@@ -86,7 +86,7 @@ case class Desc(jsRoot: String) extends Command("desc") with ResponseRequired {
         case Some(error) => client.print(List(error))
         case None =>
       }
-      case x => client.out.println(red("Unexpected response: ") + x)
+      case x => client.println(red("Unexpected response: ") + x)
     }
   }
   override val help ="""Describes the contents of a javascript variable reference in session.
@@ -101,7 +101,7 @@ case object Noop extends Command("") {
 }
 
 case object Quit extends Command(List("exit", "quit")) {
-  override def run(client: Client) = sys.exit
+  override def run(client: Client) = client.shutdown
   override def help = "Shuts down the dash client. You can also shut down by pressing {{bold:<CNTRL-C>:}} or {{bold:<CNTRL-D>:}}."
 }
 
