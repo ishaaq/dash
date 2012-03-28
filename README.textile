@@ -26,7 +26,7 @@ h2. I'm confused, this is all abstract - show me an example run.
     [1] 96686 scala.tools.nsc.MainGenericRunner
     [2] 96883 sun.tools.jconsole.JConsole
     Choose a JVM number to attach to [1 - 2] : 1
-    dash (v0.3.0): the Dynamically Attaching SHell
+    dash (v0.3.1): the Dynamically Attaching SHell
     ==============================================
     For help type :help at the prompt.
     dash> println("hello dash world!")

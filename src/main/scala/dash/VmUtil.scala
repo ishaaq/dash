@@ -6,6 +6,7 @@ import java.lang.management.ManagementFactory
 import java.net.{URL, URLClassLoader}
 import java.security.{AccessController, PrivilegedExceptionAction}
 import sun.jvmstat.monitor.{VmIdentifier, MonitoredVmUtil, HostIdentifier, MonitoredHost}
+import com.sun.tools.attach.VirtualMachine
 
 /**
  * Retrieve locally running attachable vms.
@@ -63,6 +64,8 @@ object VmUtil {
     }
     jvms.flatten.toList
   }
+
+  def attach(pid: String) = VirtualMachine.attach(pid)
 }
 
 case class Vm(val id: String, val mainClass: String, val vmArgs: String, val args: String)

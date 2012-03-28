@@ -20,7 +20,7 @@ class Attacher private (pid: Option[String]) {
 
     private def getVM: Either[String, VirtualMachine] = {
       pid match {
-        case Some(pid) => Right(VirtualMachine.attach(pid))
+        case Some(pid) => Right(VmUtil.attach(pid))
         case None => {
           val vms = VmUtil.getAttachableVms
           if(vms.size == 0) {
@@ -40,7 +40,7 @@ class Attacher private (pid: Option[String]) {
                     input.toInt match {
                       case invalidId if invalidId < 1 || invalidId > vms.length =>
                         Left("Invalid JVM id: " + invalidId)
-                      case id => Right(VirtualMachine.attach(vms(id - 1).id))
+                      case id => Right(VmUtil.attach(vms(id - 1).id))
                     }
                   } catch {
                     case ex: NumberFormatException =>
