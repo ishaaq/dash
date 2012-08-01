@@ -87,7 +87,7 @@ trait ScriptCompletionAware {
  * A Controller that retrieves Message instances from the user's console. Uses JLine
  * to support history and tab-completion.
  */
-class InteractiveClient extends Client with Completor with ScriptCompletionAware {
+class InteractiveClient extends Client with Completor with internal.RhinoScriptCompletionAware {
     private val remoteTabCompleter = new RemoteTabCompleter(server)
     private val tabCompleters = List(CommandTabCompleter, new DescTabCompleter(remoteTabCompleter), remoteTabCompleter)
     private lazy val console = new ConsoleReader
