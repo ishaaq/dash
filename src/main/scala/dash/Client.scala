@@ -58,7 +58,6 @@ abstract class Client {
                     case Some(resp) => print(resp)
                   }
                 }
-                case req: Req => server !! req
             }
         }
     }

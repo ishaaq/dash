@@ -11,7 +11,7 @@ abstract class ClientSession(val scriptsDir: String, val out: RemoteWriter, val 
             case resp => new Success(reqId, resp.toString)
           }
       } catch {
-        case err => {
+        case err: Throwable => {
           val sw = new StringWriter
           err.printStackTrace(new PrintWriter(sw))
           new Error(reqId, err.getClass.getName, err.getMessage, sw.toString)

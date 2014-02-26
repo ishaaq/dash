@@ -1,4 +1,4 @@
-  package dash
+package dash
 
 import java.util.UUID
 import Config._

@@ -1,6 +1,8 @@
 package dash
 
 import java.io.Closeable
+import scala.language.reflectiveCalls
+import scala.language.implicitConversions
 
 /**
  * Automatic Resource Management.

@@ -1,6 +1,7 @@
 package dash.internal
 
 import sun.org.mozilla.javascript.internal.{Context, NativeArray}
+import scala.language.implicitConversions
 
 object RhinoScopeWrapper {
     implicit def nativeArr2StringArr(jsArr: NativeArray): Array[String] = {

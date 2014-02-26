@@ -17,7 +17,7 @@ object Config {
   val logging = false
   val requestTimeout = 2000L
 
-  val version = "v0.3.2"
+  val version = "v0.4.0"
 
   val localHost = getByName("127.0.0.1")
 

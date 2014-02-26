@@ -59,7 +59,7 @@ object VmUtil {
           case false => None
         }
       } catch {
-        case _ => None
+        case _: Throwable => None
       }
     }
     jvms.flatten.toList

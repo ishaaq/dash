@@ -109,7 +109,7 @@ trait JavaScriptEngine extends ScriptEngine {
           runEval(evalString(__desc__ + "('" + descArgs + "')"), false)
           None
       } catch {
-        case e => Some("An error occurred: " + e.getMessage)
+        case e: Throwable => Some("An error occurred: " + e.getMessage)
       }
     }
 }

@@ -38,10 +38,10 @@ trait RhinoScriptEngine extends ScriptEngine {
                 List[String]() ++ fields ++ methods
               }
               case s: ScriptableObject => rhinoSession.getPropertyIds(s)
-              case _ => Nil
+              case _: Throwable => Nil
             }
           } catch {
-            case e => Nil
+            case _: Throwable => Nil
           }
           possibleCompletions.filter(_.startsWith(partial)).sortWith(_ < _).map(objStr + '.' + _)
         }
@@ -79,7 +79,7 @@ trait RhinoScriptEngine extends ScriptEngine {
           rhinoSession.run(__desc__ + "('" + descArgs + "')")
           None
       } catch {
-        case e => Some("An error occurred: " + e.getMessage)
+        case e: Throwable => Some("An error occurred: " + e.getMessage)
       }
     }
 }

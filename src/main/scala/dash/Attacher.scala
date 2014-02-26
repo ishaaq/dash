@@ -73,7 +73,7 @@ class Attacher private (pid: Option[String]) {
             case error => return error.left.toOption
           }
       } catch {
-        case ex => return Some(ex.getClass.getSimpleName + ": " + ex.getMessage)
+        case ex: Throwable => return Some(ex.getClass.getSimpleName + ": " + ex.getMessage)
       }
     }
 }
