@@ -1,11 +1,6 @@
 .classpath
 .project
-.manager
-lib_managed/
-project/boot/
-project/build/target/
-project/plugins/lib_managed/
-project/plugins/src_managed/
-project/plugins/target/
-target/
+.settings
+.cache
 .*.swp
+target/
