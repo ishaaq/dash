@@ -3,7 +3,7 @@ import AssemblyKeys._
 
 name := "dash"
 
-version := "0.4.0"
+version := "0.4.1"
 
 organization := "biz.chandy"
 
@@ -21,6 +21,10 @@ unmanagedJars in Compile  += file(sys.props("java.home") + "/../lib/tools.jar")
 
 scalacOptions ++= Seq("-unchecked", "-deprecation")
 
+packageOptions := Seq(ManifestAttributes(
+                    "Agent-Class" -> "dash.Agent",
+                    "Main-Class" -> "dash.Cli"))
+
 assemblySettings
 
 excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
@@ -28,7 +32,3 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 }
 
 jarName in assembly := "dash_uber_" + CrossVersion.binaryScalaVersion(scalaVersion.value) +  "_" + version.value + ".jar"
-
-packageOptions in assembly := Seq(ManifestAttributes(
-                                        "Agent-Class" -> "dash.Agent",
-                                        "Main-Class" -> "dash.Cli"))
