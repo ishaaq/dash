@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
 
 unmanagedJars in Compile  += file(sys.props("java.home") + "/../lib/tools.jar")
 
-scalacOptions ++= Seq("-unchecked", "-deprecation")
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 packageOptions := Seq(ManifestAttributes(
                     "Agent-Class" -> "dash.Agent",
