@@ -3,11 +3,11 @@ import AssemblyKeys._
 
 name := "dash"
 
-version := "0.4.2"
+version := "0.4.3"
 
 organization := "biz.chandy"
 
-crossScalaVersions := Seq("2.9.2", "2.10.0")
+crossScalaVersions := Seq("2.9.2", "2.10.3")
 
 libraryDependencies ++= Seq(
     "jline" % "jline" % "1.0" intransitive(),
