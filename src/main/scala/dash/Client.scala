@@ -6,6 +6,8 @@ import Config._
 import jline.{ConsoleReader, History, CandidateListCompletionHandler, Completor}
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.TimeoutException
+import java.net.URL
+import java.util.jar.{Manifest, Attributes}
 
 /**
  * dash's client interface. Somewhat unintuitively we create a TCP/IP server socket
@@ -16,6 +18,13 @@ import java.util.concurrent.TimeoutException
 abstract class Client {
     val id = UUID.randomUUID
     val server = new ServerPeer(start, this)
+
+    protected lazy val version: String = {
+      val clazz = this.getClass
+      val classUrl = clazz.getResource(clazz.getSimpleName() + ".class").toString
+      val manifest = new Manifest(new URL(classUrl.substring(0, classUrl.lastIndexOf("!")) + "!/META-INF/MANIFEST.MF").openStream)
+      manifest.getMainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION)
+    }
 
     def name: String
     def getReq: Req
